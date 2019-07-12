@@ -1,13 +1,13 @@
 pragma solidity 0.5.0;
 
 contract Owners {
-    event OwnerAddition(address indexed _owner, string _ownerName);
-    event OwnerRemoval(address indexed _owner, string _ownerName);
-    event OwnerUpdateName(address indexed _owner, string _oldOwnerName, string _newOwnerName);
+    event OwnerAddition(address indexed _owner, bytes32 _ownerName);
+    event OwnerRemoval(address indexed _owner, bytes32 _ownerName);
+    event OwnerUpdateName(address indexed _owner, bytes32 _oldOwnerName, bytes32 _newOwnerName);
 
     mapping (address => uint) public ownerNonce;
     mapping (address => bool) public isOwner;
-    mapping (address => string) public ownerName;
+    mapping (address => bytes32) public ownerName;
 
     address[] public owners;
 
@@ -73,8 +73,8 @@ contract Wallet is Owners{
     mapping (bytes32 => mapping (address => bool)) public confirmations;
 
     uint public required;
-    uint public executedCount;
-    uint public revertCount;
+    uint public executedTxCount;
+    uint public revertTxCount;
 
     uint256 public deployedAt;
 
@@ -135,8 +135,9 @@ contract Wallet is Owners{
      */
     /// @dev Contract constructor sets initial _owners and required number of confirmations.
     /// @param _owners List of initial owners.
+    /// @param _ownerNames List of initial ownerNames.
     /// @param _required Number of required confirmations.
-    constructor (address[] memory _owners, uint _required)
+    constructor (address[] memory _owners, bytes32[] memory _ownerNames, uint _required)
         public
         validRequirement(_owners.length, _required)
     {
@@ -145,6 +146,7 @@ contract Wallet is Owners{
             if (isOwner[_owners[i]] || _owners[i] == address(0))
                 revert("owner duplicate in input");
             isOwner[_owners[i]] = true;
+            ownerName[_owners[i]] = _ownerNames[i];
         }
         owners = _owners;
         required = _required;
@@ -153,7 +155,7 @@ contract Wallet is Owners{
     /// @dev Allows to add a new _owner. Transaction has to be sent by wallet.
     /// @param _owner Address of new owner.
     /// @param _ownerName Name of new owner.
-    function addOwner(address _owner, string memory _ownerName)
+    function addOwner(address _owner, bytes32 _ownerName)
         public
         onlyWallet
         ownerDoesNotExist(_owner)
@@ -189,7 +191,7 @@ contract Wallet is Owners{
     /// @param _owner Address of owner to be replaced.
     /// @param _newOwner Address of new owner.
     /// @param _newOwnerName Name of new owner.
-    function replaceOwner(address _owner, address _newOwner, string memory  _newOwnerName)
+    function replaceOwner(address _owner, address _newOwner, bytes32  _newOwnerName)
         public
         onlyWallet
         ownerExists(_owner)
@@ -209,12 +211,12 @@ contract Wallet is Owners{
     /// @dev Allows to replace an ownerName with a new ownerName. Transaction has to be sent by wallet.
     /// @param _owner Address of owner to update ownerName.
     /// @param _newOwnerName New owner's name.
-    function updateOwnerName(address _owner, string memory _newOwnerName)
+    function updateOwnerName(address _owner, bytes32  _newOwnerName)
         public
         onlyWallet
         ownerExists(_owner)
     {
-        string storage oldOwnerName = ownerName[_owner];
+        bytes32 oldOwnerName = ownerName[_owner];
         ownerName[_owner] = _newOwnerName;
         emit OwnerUpdateName(_owner, oldOwnerName, _newOwnerName);
     }
@@ -281,12 +283,12 @@ contract Wallet is Owners{
             (bool success, ) = tx.destination.call.value(tx.value)(tx.data);
             if (success) {
                 emit Execution(transactionId);
-                executedCount++;
+                executedTxCount++;
             }
             else {
                 emit ExecutionFailure(transactionId);
                 tx.executed = false;
-                revertCount++;
+                revertTxCount++;
             }
         }
     }
@@ -416,12 +418,12 @@ contract Wallet is Owners{
         return transactionIds.length;
     }
 
-    function pendingCount()
+    function pendingTxCount()
         public
         view
         returns(uint)
     {
-        return txCount() - executedCount - revertCount;
+        return txCount() - executedTxCount - revertTxCount;
     }
 
     function getBalance()
@@ -430,5 +432,13 @@ contract Wallet is Owners{
         returns(uint)
     {
         return address(this).balance;
+    }
+
+    function currentTime()
+        public
+        view
+        returns(uint)
+    {
+        return block.timestamp;
     }
 }

@@ -1,5 +1,14 @@
 {
+  "name": "daf",
+  "version": "1.0.0",
+  "description": "Decentralized Autonomous Foundation",
+  "scripts": {
+    "deploy:dev": "truffle migrate --reset --network development",
+    "deploy:pro": "truffle migrate --reset --network production"
+  },
   "dependencies": {
-    "truffle": "^5.0.27"
+    "dotenv": "^8.0.0",
+    "truffle": "^5.0.27",
+    "truffle-hdwallet-provider": "^1.0.14"
   }
 }
