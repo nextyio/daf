@@ -56,6 +56,14 @@ contract Owners {
         require(ownerNonce[_owner] > 0, "no tx found");
         return sha256(abi.encodePacked(_owner, ownerNonce[_owner] - 1));
     }
+
+    function ownersCount()
+        public
+        view
+        returns(uint)
+    {
+        return owners.length;
+    }
 }
 
 contract Wallet is Owners{
@@ -68,13 +76,19 @@ contract Wallet is Owners{
     event RequirementChange(uint required);
 
     mapping (bytes32 => Transaction) public transactions;
-    bytes32[] public transactionIds;
+
+    bytes32[] public pendingTxIds;
+    bytes32[] public comfirmedTxIds;
+    bytes32[] public revertedTxIds;
+
+    mapping (bytes32 => uint) public pendingTxPointer;
+    mapping (bytes32 => uint) public comfirmedTxPointer;
+    mapping (bytes32 => uint) public revertedTxPointer;
 
     mapping (bytes32 => mapping (address => bool)) public confirmations;
 
     uint public required;
     uint public executedTxCount;
-    uint public revertTxCount;
 
     uint256 public deployedAt;
 
@@ -83,6 +97,8 @@ contract Wallet is Owners{
         uint value;
         bytes data;
         bool executed;
+        uint count;
+        bytes32 description;
     }
 
     modifier onlyWallet() {
@@ -237,12 +253,11 @@ contract Wallet is Owners{
     /// @param value Transaction ether value.
     /// @param data Transaction data payload.
     /// @return Returns transaction ID.
-    function submitTransaction(address destination, uint value, bytes memory data)
+    function submitTransaction(address _destination, uint _value, bytes memory _data, bytes32 _description)
         public
         returns (bytes32 transactionId)
     {
-        transactionId = addTransaction(destination, value, data);
-        transactionIds.push(transactionId);
+        transactionId = addTransaction(_destination, _value, _data, _description);
         confirmTransaction(transactionId);
     }
 
@@ -255,81 +270,114 @@ contract Wallet is Owners{
         notConfirmed(transactionId, msg.sender)
     {
         confirmations[transactionId][msg.sender] = true;
+        transactions[transactionId].count++;
         emit Confirmation(msg.sender, transactionId);
         executeTransaction(transactionId);
     }
 
     /// @dev Allows an owner to revoke a confirmation for a transaction.
-    /// @param transactionId Transaction ID.
-    function revokeConfirmation(bytes32 transactionId)
+    /// @param _transactionId Transaction ID.
+    function revokeConfirmation(bytes32 _transactionId)
         public
         ownerExists(msg.sender)
-        confirmed(transactionId, msg.sender)
-        notExecuted(transactionId)
+        confirmed(_transactionId, msg.sender)
+        notExecuted(_transactionId)
     {
-        confirmations[transactionId][msg.sender] = false;
-        emit Revocation(msg.sender, transactionId);
+        confirmations[_transactionId][msg.sender] = false;
+        transactions[_transactionId].count--;
+        emit Revocation(msg.sender, _transactionId);
     }
 
     /// @dev Allows anyone to execute a confirmed transaction.
-    /// @param transactionId Transaction ID.
-    function executeTransaction(bytes32 transactionId)
+    /// @param _transactionId Transaction ID.
+    function executeTransaction(bytes32 _transactionId)
         public
-        notExecuted(transactionId)
+        notExecuted(_transactionId)
     {
-        if (isConfirmed(transactionId)) {
-            Transaction storage tx = transactions[transactionId];
+        if (isConfirmed(_transactionId)) {
+            Transaction storage tx = transactions[_transactionId];
             tx.executed = true;
             (bool success, ) = tx.destination.call.value(tx.value)(tx.data);
             if (success) {
-                emit Execution(transactionId);
+                emit Execution(_transactionId);
                 executedTxCount++;
+                addComfirmedTx(_transactionId);
             }
             else {
-                emit ExecutionFailure(transactionId);
+                emit ExecutionFailure(_transactionId);
                 tx.executed = false;
-                revertTxCount++;
+                addRevertedTx(_transactionId);
             }
+            removePendingTx(_transactionId);
         }
     }
 
+    function removePendingTx(bytes32 _transactionId)
+        private
+    {
+        uint pointerAt = pendingTxPointer[_transactionId];
+        uint count = pendingTxCount();
+        bytes32 lastPendingTxId = pendingTxIds[count-1];
+
+        pendingTxPointer[_transactionId] = 0;
+        pendingTxPointer[lastPendingTxId] = pointerAt;
+        pendingTxIds[pointerAt] = lastPendingTxId;
+        delete pendingTxIds[count - 1];
+        pendingTxIds.length--;
+    }
+
+    function addComfirmedTx(bytes32 _transactionId)
+        private
+    {
+        comfirmedTxIds.push(_transactionId);
+        uint count = comfirmedTxCount();
+        comfirmedTxPointer[_transactionId] = count - 1;
+    }
+
+    function addRevertedTx(bytes32 _transactionId)
+        private
+    {
+        revertedTxIds.push(_transactionId);
+        uint count = revertedTxCount();
+        revertedTxPointer[_transactionId] = count - 1;
+    }
+
     /// @dev Returns the confirmation status of a transaction.
-    /// @param transactionId Transaction ID.
+    /// @param _transactionId Transaction ID.
     /// @return Confirmation status.
-    function isConfirmed(bytes32 transactionId)
+    function isConfirmed(bytes32 _transactionId)
         public
         view
         returns (bool)
     {
-        uint count = 0;
-        for (uint i = 0; i < owners.length; i++) {
-            if (confirmations[transactionId][owners[i]])
-                count += 1;
-            if (count >= required)
-                return true;
-        }
+        return transactions[_transactionId].count >= required;
     }
 
     /*
      * Internal functions
      */
     /// @dev Adds a new transaction to the transaction mapping, if transaction does not exist yet.
-    /// @param destination Transaction target address.
-    /// @param value Transaction ether value.
-    /// @param data Transaction data payload.
+    /// @param _destination Transaction target address.
+    /// @param _value Transaction ether value.
+    /// @param _data Transaction data payload.
+    /// @param _description Transaction description.
     /// @return Returns transaction ID.
-    function addTransaction(address destination, uint value, bytes memory data)
+    function addTransaction(address _destination, uint _value, bytes memory _data, bytes32 _description)
         internal
-        notNull(destination)
+        notNull(_destination)
         returns (bytes32 transactionId)
     {
         transactionId = increaseNonce(msg.sender);
         transactions[transactionId] = Transaction({
-            destination: destination,
-            value: value,
-            data: data,
-            executed: false
+            destination: _destination,
+            value: _value,
+            data: _data,
+            executed: false,
+            count: 0,
+            description: _description
         });
+        pendingTxIds.push(transactionId);
+        pendingTxPointer[transactionId] = pendingTxIds.length - 1;
         emit Submission(transactionId);
     }
 
@@ -337,29 +385,14 @@ contract Wallet is Owners{
      * Web3 call functions
      */
     /// @dev Returns number of confirmations of a transaction.
-    /// @param transactionId Transaction ID.
+    /// @param _transactionId Transaction ID.
     /// @return Number of confirmations.
-    function getConfirmationCount(bytes32 transactionId)
+    function getConfirmationCount(bytes32 _transactionId)
         public
         view
         returns (uint count)
     {
-        for (uint i = 0; i < owners.length; i++)
-        if (confirmations[transactionId][owners[i]])
-            count += 1;
-    }
-
-    //TODO
-    /// @dev Returns total number of transactions after filers are applied.
-    /// @param pending Include pending transactions.
-    /// @param executed Include executed transactions.
-    /// @return Total number of transactions after filters are applied.
-    function getTransactionCount(bool pending, bool executed)
-        public
-        view
-        returns (uint count)
-    {
-        count = transactionIds.length;
+        return transactions[_transactionId].count;
     }
 
     /// @dev Returns list of owners.
@@ -373,9 +406,9 @@ contract Wallet is Owners{
     }
 
     /// @dev Returns array with owner addresses, which confirmed transaction.
-    /// @param transactionId Transaction ID.
+    /// @param _transactionId Transaction ID.
     /// @return Returns array of owner addresses.
-    function getConfirmations(bytes32 transactionId)
+    function getConfirmations(bytes32 _transactionId)
         public
         view
         returns (address[] memory _confirmations)
@@ -384,7 +417,7 @@ contract Wallet is Owners{
         uint count = 0;
         uint i;
         for (i = 0; i < owners.length; i++)
-            if (confirmations[transactionId][owners[i]]) {
+            if (confirmations[_transactionId][owners[i]]) {
                 confirmationsTemp[count] = owners[i];
                 count += 1;
             }
@@ -393,29 +426,23 @@ contract Wallet is Owners{
             _confirmations[i] = confirmationsTemp[i];
     }
 
-    /// @dev Returns list of transaction IDs in defined range.
-    /// @param from Index start position of transaction array.
-    /// @param to Index end position of transaction array.
-    /// @param pending Include pending transactions.
-    /// @param executed Include executed transactions.
-    /// @return Returns array of transaction IDs.
-    function getTransactionIds(uint from, uint to)
+    /// @dev Returns list of pending transaction IDs in defined range.
+    /// @param _from Index start position of pending transaction array.
+    /// @param _to Index end position of pending transaction array.
+    /// @return Returns array of pending transaction IDs.
+    function getPendingTransactionIds(uint _from, uint _to)
         public
         view
         returns (bytes32[] memory)
     {
+        uint pendingTxCount = pendingTxCount();
+        if (pendingTxCount == 0) return new bytes32[](0);
+        uint from = _from >= pendingTxCount ? 0 : _from;
+        uint to = (_to < pendingTxCount) && (_to >= _from) ? _to : pendingTxCount-1;
         bytes32[] memory _transactionIds = new bytes32[](to - from + 1);
         for (uint i = from; i <= to; i++)
-            _transactionIds[i-from] = transactionIds[i];
+            _transactionIds[i-from] = pendingTxIds[i];
         return _transactionIds;
-    }
-
-    function txCount()
-        public
-        view
-        returns(uint)
-    {
-        return transactionIds.length;
     }
 
     function pendingTxCount()
@@ -423,7 +450,61 @@ contract Wallet is Owners{
         view
         returns(uint)
     {
-        return txCount() - executedTxCount - revertTxCount;
+        return pendingTxIds.length;
+    }
+
+    /// @dev Returns list of comfirmed transaction IDs in defined range.
+    /// @param _from Index start position of comfirmed transaction array.
+    /// @param _to Index end position of comfirmed transaction array.
+    /// @return Returns array of comfirmed transaction IDs.
+    function getComfirmedTransactionIds(uint _from, uint _to)
+        public
+        view
+        returns (bytes32[] memory)
+    {
+        uint comfirmedTxCount = comfirmedTxCount();
+        if (comfirmedTxCount == 0) return new bytes32[](0);
+        uint from = _from >= comfirmedTxCount ? 0 : _from;
+        uint to = (_to < comfirmedTxCount) && (_to >= _from) ? _to : comfirmedTxCount-1;
+        bytes32[] memory _transactionIds = new bytes32[](to - from + 1);
+        for (uint i = from; i <= to; i++)
+            _transactionIds[i-from] = comfirmedTxIds[i];
+        return _transactionIds;
+    }
+
+    function comfirmedTxCount()
+        public
+        view
+        returns(uint)
+    {
+        return comfirmedTxIds.length;
+    }
+
+    /// @dev Returns list of reverted transaction IDs in defined range.
+    /// @param _from Index start position of reverted transaction array.
+    /// @param _to Index end position of reverted transaction array.
+    /// @return Returns array of reverted transaction IDs.
+    function getRevertedTransactionIds(uint _from, uint _to)
+        public
+        view
+        returns (bytes32[] memory)
+    {
+        uint revertedTxCount = comfirmedTxCount();
+        if (revertedTxCount == 0) return new bytes32[](0);
+        uint from = _from >= revertedTxCount ? 0 : _from;
+        uint to = (_to < revertedTxCount) && (_to >= _from) ? _to : revertedTxCount-1;
+        bytes32[] memory _transactionIds = new bytes32[](to - from + 1);
+        for (uint i = from; i <= to; i++)
+            _transactionIds[i-from] = revertedTxIds[i];
+        return _transactionIds;
+    }
+
+    function revertedTxCount()
+        public
+        view
+        returns(uint)
+    {
+        return revertedTxIds.length;
     }
 
     function getBalance()
