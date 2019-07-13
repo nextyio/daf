@@ -489,7 +489,7 @@ contract Wallet is Owners{
         view
         returns (bytes32[] memory)
     {
-        uint revertedTxCount = comfirmedTxCount();
+        uint revertedTxCount = revertedTxCount();
         if (revertedTxCount == 0) return new bytes32[](0);
         uint from = _from >= revertedTxCount ? 0 : _from;
         uint to = (_to < revertedTxCount) && (_to >= _from) ? _to : revertedTxCount-1;
