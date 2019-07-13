@@ -7,3 +7,11 @@ lib/
 
 dev_dist/node_modules/
 # build/
+
+# misc
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
