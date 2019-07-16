@@ -1,4 +1,8 @@
 import WalletPage from '@/module/page/wallet/Container'
+import GovernancePage from '@/module/page/governance/Container'
+import PoolMakerPage from '@/module/page/pool-maker/Container'
+import PoolControlPage from '@/module/page/pool-control/Container'
+
 import PendingTxsPage from '@/module/page/pending-txs/Container'
 import ExecutedTxsPage from '@/module/page/executed-txs/Container'
 
@@ -18,6 +22,18 @@ export default [
   {
     path: '/wallet',
     page: WalletPage
+  },
+  {
+    path: '/governance',
+    page: GovernancePage
+  },
+  {
+    path: '/pool-maker',
+    page: PoolMakerPage
+  },
+  {
+    path: '/pool-control',
+    page: PoolControlPage
   },
   {
     path: '/pending-txs',

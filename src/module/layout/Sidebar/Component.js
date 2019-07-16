@@ -97,9 +97,9 @@ export default class extends BaseComponent {
           </Menu.Item>
 
           <SubMenu key="contracts" title={I18N.get('0005')}>
-            <Menu.Item key="gov">{I18N.get('00051')}</Menu.Item>
+            <Menu.Item key="governance">{I18N.get('00051')}</Menu.Item>
             <Menu.Item key="pool-maker">{I18N.get('00052')}</Menu.Item>
-            <Menu.Item key="pool">{I18N.get('00053')}</Menu.Item>
+            <Menu.Item key="pool-control">{I18N.get('00053')}</Menu.Item>
           </SubMenu>
 
           <SubMenu key="transactions" title={I18N.get('0003')}>
@@ -120,7 +120,10 @@ export default class extends BaseComponent {
     if (_.includes([
       'wallet',
       'pending-txs',
-      'executed-txs'
+      'executed-txs',
+      'governance',
+      'pool-maker',
+      'pool-control'
     ], key)) {
       this.props.history.push('/' + e.key)
     } else if (key === 'logout') {
@@ -145,7 +148,10 @@ export default class extends BaseComponent {
     let sidebar = [
       'wallet',
       'pending-txs',
-      'executed-txs'
+      'executed-txs',
+      'governance',
+      'pool-maker',
+      'pool-control'
     ]
 
     if (!url) {
