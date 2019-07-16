@@ -10,7 +10,8 @@ class ContractRedux extends BaseRedux {
       web3: null,
       ntfToken: null,
       nextyGovernance: null,
-      walletPro: null
+      walletPro: null,
+      walletProEvent: null
     }
   }
 }

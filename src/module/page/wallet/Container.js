@@ -15,15 +15,17 @@ export default createContainer(Component, (state) => {
     walletService.loadNtfBalance()
     walletService.loadRequired()
     walletService.loadOwners()
-    walletService.loadTxCounts()
+    walletService.loadPendingTxCount()
+    walletService.loadExecutedTxCount()
+    walletService.loadTxs()
   }
 
   if (state.user.wallet !== curWallet && !curWallet) {
     curWallet = state.user.wallet
     load()
-    setInterval(() => {
-      load()
-    }, 5000)
+    // setInterval(() => {
+    //   load()
+    // }, 5000)
   }
 
   return {
@@ -35,8 +37,7 @@ export default createContainer(Component, (state) => {
     owners: state.wallet.owners,
 
     pendingTxCount: state.wallet.pendingTxCount,
-    comfirmedTxCount: state.wallet.comfirmedTxCount,
-    revertedTxCount: state.wallet.revertedTxCount
+    executedTxCount: state.wallet.executedTxCount
   }
 }, () => {
   const ntfTokenService = new NtfTokenService()

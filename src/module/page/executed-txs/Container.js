@@ -5,21 +5,18 @@ var curWallet = null
 export default createContainer(Component, (state) => {
   const walletService = new WalletService()
   async function load () {
-    walletService.loadTxCounts()
-    walletService.loadRevertedTxs()
+    walletService.loadExecutedTxCount()
+    // walletService.loadTxs()
   }
 
   if (state.user.wallet !== curWallet && !curWallet) {
     curWallet = state.user.wallet
     load()
-    setInterval(() => {
-      load()
-    }, 5000)
   }
 
   return {
-    revertedTxCount: state.wallet.revertedTxCount,
-    revertedTxs: state.wallet.revertedTxs
+    executedTxCount: state.wallet.executedTxCount,
+    executedTxs: state.wallet.executedTxs
   }
 }, () => {
   return {

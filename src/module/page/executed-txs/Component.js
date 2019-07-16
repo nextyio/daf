@@ -29,15 +29,15 @@ export default class extends LoggedInPage {
   loadData () {
   }
 
-  renderRevertedTxs () {
-    let obj = Object(this.props.revertedTxs)
+  renderExecutedTxs () {
+    let obj = Object(this.props.executedTxs)
     let data = Object.keys(obj).map(function(key) {
-      console.log(obj[key])
+      // console.log(obj[key])
       return obj[key]
     });
     const columns = [
         {
-            title: 'Reverted Txs: ' + this.props.revertedTxCount,
+            title: 'Executed Txs: ' + this.props.executedTxCount,
             children: [
                 {
                     title: 'Tx ID',
@@ -89,6 +89,7 @@ export default class extends LoggedInPage {
                 dataSource={data}
                 loading={this.props.loading}
                 columns={columns}
+                expandedRowRender={record => <p style={{ margin: 0 }}>{record.confirmations.map(ele => { return cutString(ele) + ' ' })}</p>}
                 pagination={false}
                 rowKey="id">
             </Table>
@@ -99,7 +100,7 @@ export default class extends LoggedInPage {
   ord_renderContent () { // eslint-disable-line
     return (
       <div className="">
-          {this.renderRevertedTxs()}
+          {this.renderExecutedTxs()}
       </div>
     )
   }
@@ -108,7 +109,7 @@ export default class extends LoggedInPage {
     return (
       <Breadcrumb style={{ 'marginLeft': '16px', 'marginTop': '16px', float: 'right' }}>
         <Breadcrumb.Item><Link to="/wallet"><Icon type="home" /> Home</Link></Breadcrumb.Item>
-        <Breadcrumb.Item>Reverted Txs</Breadcrumb.Item>
+        <Breadcrumb.Item>Executed Txs</Breadcrumb.Item>
       </Breadcrumb>
     )
   }

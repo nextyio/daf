@@ -68,7 +68,7 @@ export default class extends LoggedInPage {
     return (
       <div>
         <p>Owner List</p>
-        {owners.map((data) => <p key={data[0]}>{data[1]}</p>)}
+        {owners.map((data) => <p key={data[0]}>{data[1].name} {data[1].address}</p>)}
       </div>
     )
   }
@@ -78,11 +78,10 @@ export default class extends LoggedInPage {
       <div>
         <p>Foundation Wallet: {this.props.address}</p>
         <p>Balance: {weiToEther(this.props.balance)} NTY / {weiToEther(this.props.ntfBalance)} NTF</p>
-        <p>Execution Requirement: {this.props.required} Comfirmations / {this.props.ownersCount} Owners</p>
+        <p>Execution Requirement: {this.props.required} Confirmations / {this.props.ownersCount} Owners</p>
         <p>
           {this.props.pendingTxCount} Pending /
-          {this.props.comfirmedTxCount} Comfirmed /
-          {this.props.revertedTxCount} Reverted
+          {this.props.executedTxCount} Executed
         </p>
       </div>
     )

@@ -65,9 +65,9 @@ contract Owners {
 }
 
 contract Wallet is Owners{
-    event Confirmation(bytes32 indexed transactionId, address indexed sender, uint indexed count);
-    event Revocation(bytes32 indexed transactionId, address indexed sender, uint indexed count);
-    event Submission(bytes32 indexed transactionId, address indexed sender);
+    event Confirmation(bytes32 indexed transactionId, address sender, uint count);
+    event Revocation(bytes32 indexed transactionId, address sender, uint count);
+    event Submission(bytes32 indexed transactionId, address sender);
     event ExecutionSuccess(bytes32 indexed transactionId, bytes result);
     event ExecutionFailure(bytes32 indexed transactionId);
     event Deposit(address indexed sender, uint value);
@@ -79,6 +79,7 @@ contract Wallet is Owners{
 
     uint public required;
     uint public executedTxCount;
+    uint public pendingTxCount;
 
     uint256 public deployedAt;
 
@@ -250,6 +251,7 @@ contract Wallet is Owners{
     {
         transactionId = addTransaction(_destination, _value, _data, _description);
         confirmTransaction(transactionId);
+        pendingTxCount++;
     }
 
     /// @dev Allows an owner to confirm a transaction.
@@ -292,6 +294,7 @@ contract Wallet is Owners{
             if (success) {
                 emit ExecutionSuccess(_transactionId, result);
                 executedTxCount++;
+                pendingTxCount--;
             }
             else {
                 emit ExecutionFailure(_transactionId);
@@ -335,5 +338,34 @@ contract Wallet is Owners{
             description: _description
         });
         emit Submission(transactionId, msg.sender);
+    }
+
+    function getComfirmStatus(bytes32 _transactionId, address _owner)
+        public
+        view
+        returns(bool)
+    {
+        return confirmations[_transactionId][_owner];
+    }
+
+    /// @dev Returns array with owner addresses, which confirmed transaction.
+    /// @param _transactionId Transaction ID.
+    /// @return Returns array of owner addresses.
+    function getConfirmations(bytes32 _transactionId)
+        public
+        view
+        returns (address[] memory _confirmations)
+    {
+        address[] memory confirmationsTemp = new address[](owners.length);
+        uint count = 0;
+        uint i;
+        for (i = 0; i < owners.length; i++)
+            if (confirmations[_transactionId][owners[i]]) {
+                confirmationsTemp[count] = owners[i];
+                count += 1;
+            }
+        _confirmations = new address[](count);
+        for (i = 0; i < count; i++)
+            _confirmations[i] = confirmationsTemp[i];
     }
 }

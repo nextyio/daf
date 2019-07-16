@@ -3,7 +3,7 @@ export default {
   '0001': 'User',
   '0002': 'Wallet Control',
   '0003': 'Pending Txs',
-  '0004': 'Comfirmed Txs',
+  '0004': 'Executed Txs',
   '0005': 'Reverted Txs',
   '0006': 'Tasks',
   '0007': 'Nexty Management',

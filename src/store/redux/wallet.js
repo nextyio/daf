@@ -8,6 +8,7 @@ class WalletRedux extends BaseRedux {
   defineDefaultState () {
     return {
       address: null,
+      deployedAt: 0,
       ownersCount: 0,
       owners: null,
       balance: 0,
@@ -15,11 +16,9 @@ class WalletRedux extends BaseRedux {
       required: 0,
 
       pendingTxCount: 0,
-      comfirmedTxCount: 0,
-      revertedTxCount: 0,
+      executedTxCount: 0,
       pendingTxs: [],
-      comfirmedTxs: [],
-      revertedTxs: []
+      executedTxs: []
     }
   }
 }

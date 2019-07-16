@@ -73,21 +73,6 @@ export default class extends LoggedInPage {
     )
   }
 
-  renderBaseInfo () {
-    return (
-      <div>
-        <p>wallet: {this.props.address}</p>
-        <p>balance: {weiToEther(this.props.balance)} NTY / {weiToEther(this.props.ntfBalance)} NTF</p>
-        <p>type: {this.props.required} / {this.props.ownersCount}</p>
-        <p>
-          {this.props.pendingTxCount} Pending /
-          {this.props.comfirmedTxCount} Comfirmed /
-          {this.props.revertedTxCount} Reverted
-        </p>
-      </div>
-    )
-  }
-
   renderTransfer () {
     return (
       <Row style={{ 'marginTop': '15px' }}>
@@ -141,24 +126,40 @@ export default class extends LoggedInPage {
     )
   }
 
-  renderComfirmButton(record) {
+  renderConfirmButton (record) {
     return (
-      <button onClick={() => record.comfirmed ? this.revoke(record.id) : this.comfirm(record.id)}> {record.comfirmed ? <Icon type="dislike" /> : <Icon type="like" />} </button>
+      <div>
+        <button className="iconButton" onClick={() => record.confirmed ? this.revoke(record.id) : this.confirm(record.id)}>
+          {record.confirmed ? <Icon type="dislike" /> : <Icon type="like" />}
+        </button>
+        {
+          record.count >= this.props.required &&
+            <button className="iconButton" onClick={() => this.execute(record.id)}>
+              {record.confirmed ? <Icon type="reload" /> : <Icon type="like" />}
+            </button>
+        }
+      </div>
     )
   }
 
-  async comfirm(txId) {
-    return await this.props.comfirm(txId)
+  async execute (txId) {
+    console.log('execute', txId)
+    return await this.props.execute(txId)
   }
 
-  async revoke(txId) {
+  async confirm (txId) {
+    console.log('confirm', txId)
+    return await this.props.confirm(txId)
+  }
+
+  async revoke (txId) {
+    console.log('revoke', txId)
     return await this.props.revoke(txId)
   }
 
   renderPendingTxs() {
     let obj = Object(this.props.pendingTxs)
     let data = Object.keys(obj).map(function(key) {
-      console.log(obj[key])
       return obj[key]
     });
     const columns = [
@@ -198,7 +199,7 @@ export default class extends LoggedInPage {
                     }
                 },
                 {
-                    title: 'comfirmed',
+                    title: 'confirmed',
                     dataIndex: 'count',
                     key: 'count',
                     render: (count, record) => {
@@ -216,11 +217,10 @@ export default class extends LoggedInPage {
                 {
                     title: 'Action',
                     dataIndex: 'action',
-                    key: 'comfirmed',
-                    render: (comfirmed, record) => {
-                        console.log('xxx', record)
+                    key: 'confirmed',
+                    render: (confirmed, record) => {
                         return (
-                          this.renderComfirmButton(record)
+                          this.renderConfirmButton(record)
                         )
                     }
                 },
@@ -234,6 +234,7 @@ export default class extends LoggedInPage {
                 dataSource={data}
                 loading={this.props.loading}
                 columns={columns}
+                expandedRowRender={record => <p style={{ margin: 0 }}>{record.confirmations.map(ele => { return cutString(ele) + ' ' })}</p>}
                 pagination={false}
                 rowKey="id">
             </Table>

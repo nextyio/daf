@@ -18,6 +18,14 @@ export default class extends BaseService {
     await this.dispatch(redux.actions.address_update(address))
   }
 
+  async loadDeployedAt () {
+    const redux = this.store.getRedux('wallet')
+    let store = this.store.getState()
+    let methods = store.contracts.walletPro.methods
+    let deployedAt = await methods.deployedAt().call()
+    await this.dispatch(redux.actions.deployedAt_update(deployedAt))
+  }
+
   async loadRequired () {
     const redux = this.store.getRedux('wallet')
     let store = this.store.getState()
@@ -29,74 +37,61 @@ export default class extends BaseService {
   async loadBalance () {
     const redux = this.store.getRedux('wallet')
     let store = this.store.getState()
-    let methods = store.contracts.walletPro.methods
-    let balance = await methods.getBalance().call()
+    let balance = await store.user.web3.eth.getBalance(store.wallet.address)
     await this.dispatch(redux.actions.balance_update(balance))
   }
 
-  async loadTxCounts () {
+  async loadPendingTxCount () {
     const redux = this.store.getRedux('wallet')
     let store = this.store.getState()
     let methods = store.contracts.walletPro.methods
     let pendingTxCount = await methods.pendingTxCount().call()
-    let comfirmedTxCount = await methods.comfirmedTxCount().call()
-    let revertedTxCount = await methods.revertedTxCount().call()
-
     await this.dispatch(redux.actions.pendingTxCount_update(pendingTxCount))
-    await this.dispatch(redux.actions.comfirmedTxCount_update(comfirmedTxCount))
-    await this.dispatch(redux.actions.revertedTxCount_update(revertedTxCount))
   }
 
-  async loadPendingTxs () {
-    const redux = this.store.getRedux('wallet')
-    // await this.dispatch(redux.actions.pendingTxs_reset())
-    let store = this.store.getState()
-    let methods = store.contracts.walletPro.methods
-    let pendingTxCount = await methods.pendingTxCount().call()
-    let pendingTxIds = await methods.getPendingTransactionIds(0, pendingTxCount - 1).call()
-    let txs = []
-    for (let i = 0; i < pendingTxIds.length; i++) {
-      let pendingTxId = pendingTxIds[i]
-      let arrayTypeTx = await methods.transactions(pendingTxId).call()
-      let comfirmations = await methods.getConfirmations(pendingTxId).call()
-      let txObject = this.getTxObject(pendingTxId, comfirmations, arrayTypeTx)
-      txs.push(txObject)
-    }
-    await this.dispatch(redux.actions.pendingTxs_update(txs))
-  }
-
-  async loadComfirmedTxs () {
+  async loadExecutedTxCount () {
     const redux = this.store.getRedux('wallet')
     let store = this.store.getState()
     let methods = store.contracts.walletPro.methods
-    let comfirmedTxCount = await methods.comfirmedTxCount().call()
-    let comfirmedTxIds = await methods.getComfirmedTransactionIds(0, comfirmedTxCount - 1).call()
-    let txs = []
-    for (let i = 0; i < comfirmedTxIds.length; i++) {
-      let comfirmedTxId = comfirmedTxIds[i]
-      let arrayTypeTx = await methods.transactions(comfirmedTxId).call()
-      let comfirmations = await methods.getConfirmations(comfirmedTxId).call()
-      let txObject = this.getTxObject(comfirmedTxId, comfirmations, arrayTypeTx)
-      txs.push(txObject)
-    }
-    await this.dispatch(redux.actions.comfirmedTxs_update(txs))
+    let executedTxCount = await methods.executedTxCount().call()
+    await this.dispatch(redux.actions.executedTxCount_update(executedTxCount))
   }
 
-  async loadRevertedTxs () {
+  async loadTxs () {
     const redux = this.store.getRedux('wallet')
     let store = this.store.getState()
+    let wallet = store.user.wallet
     let methods = store.contracts.walletPro.methods
-    let revertedTxCount = await methods.revertedTxCount().call()
-    let revertedTxIds = await methods.getRevertedTransactionIds(0, revertedTxCount - 1).call()
-    let txs = []
-    for (let i = 0; i < revertedTxIds.length; i++) {
-      let revertedTxId = revertedTxIds[i]
-      let arrayTypeTx = await methods.transactions(revertedTxId).call()
-      let comfirmations = await methods.getConfirmations(revertedTxId).call()
-      let txObject = this.getTxObject(revertedTxId, comfirmations, arrayTypeTx)
-      txs.push(txObject)
+    let events = await this.getPastEvents('Submission', null, 0, 0)
+    if (events.length === 0) return
+    let pendingTxs = []
+    let executedTxs = []
+    for (let i = 0; i < events.length; await i++) {
+      let event = await events[i]
+      let txId = event.returnValues[0]
+      // console.log('txId', txId)
+      let rawTx = await methods.transactions(txId).call()
+      let confirmations = await methods.getConfirmations(txId).call()
+      let confirmed = this.isConfirmedByMe(confirmations)
+      let tx = {
+        id: txId,
+        destination: rawTx[0],
+        value: rawTx[1],
+        data: rawTx[2],
+        executed: Boolean(rawTx[3]),
+        count: Number(rawTx[4]),
+        description: utils.hexToAscii(rawTx[5]),
+        confirmations: confirmations,
+        confirmed: Boolean(confirmed)
+      }
+      if (!tx.executed) {
+        pendingTxs.push(tx)
+      } else {
+        executedTxs.push(tx)
+      }
     }
-    await this.dispatch(redux.actions.revertedTxs_update(txs))
+    await this.dispatch(redux.actions.pendingTxs_update(pendingTxs))
+    await this.dispatch(redux.actions.executedTxs_update(executedTxs))
   }
 
   async loadNtfBalance () {
@@ -136,7 +131,13 @@ export default class extends BaseService {
     return rs
   }
 
-  async comfirm (txId) {
+  async execute (txId) {
+    let store = this.store.getState()
+    let methods = store.contracts.walletPro.methods
+    return await methods.executeTransaction(txId).send({from: store.user.wallet})
+  }
+
+  async confirm (txId) {
     let store = this.store.getState()
     let methods = store.contracts.walletPro.methods
     return await methods.confirmTransaction(txId).send({from: store.user.wallet})
@@ -156,36 +157,47 @@ export default class extends BaseService {
     await this.dispatch(redux.actions.ownersCount_update(ownersCount))
     let owners = []
     for (let i = 0; i < ownersCount; i++) {
-      let owner = await methods.owners(i).call()
+      let ownerAddress = await methods.owners(i).call()
+      let ownerName = await methods.ownerName(ownerAddress).call()
+      let owner = {
+        address: ownerAddress,
+        name: utils.toAscii(ownerName)
+      }
       owners.push(owner)
     }
     await this.dispatch(redux.actions.owners_update(owners))
   }
 
-  getTxObject (id, comfirmations, arrayTypeTx) {
-    return {
-      id: id,
-      destination: arrayTypeTx[0],
-      value: arrayTypeTx[1],
-      data: arrayTypeTx[2],
-      executed: Boolean(arrayTypeTx[3]),
-      count: Number(arrayTypeTx[4]),
-      description: utils.hexToAscii(arrayTypeTx[5]),
-      comfirmations: comfirmations,
-      comfirmed: this.isComfirmed(comfirmations)
-    }
-  }
-
-  isComfirmed (comfirmatons) {
+  isConfirmedByMe (confirmatons) {
     let store = this.store.getState()
-    let len = comfirmatons.length
+    let len = confirmatons.length
     let wallet = store.user.wallet
     if (!len) return false
     for (let i = 0; i < len; i++) {
-      if (wallet.toLowerCase() === comfirmatons[i].toLowerCase()) {
+      if (wallet.toLowerCase() === confirmatons[i].toLowerCase()) {
         return true
       }
     }
     return false
+  }
+
+  async getPastEvents (eventName, filter, fromBlock, toBlock) {
+    let store = this.store.getState()
+    let contract = store.contracts.walletPro
+    let methods = contract.methods
+    let deployedAt = await methods.deployedAt().call()
+    return await contract.getPastEvents(eventName, {
+      filter: filter,
+      fromBlock: !fromBlock ? deployedAt : fromBlock,
+      toBlock: toBlock ? toBlock : 'latest'
+    })
+  }
+
+  async getConfirmationNames (owners, confirmations) {
+    let confirmationNames = []
+    for (let i = 0; i < owners.length; i++) {
+      let owner = owners[i]
+      confirmationNames.push(owner.name)
+    }
   }
 }

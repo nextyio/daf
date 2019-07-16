@@ -1,0 +1,39 @@
+pragma solidity 0.5.0;
+import "./interfaces/GovI.sol";
+// import "./interfaces/NtfTokenI.sol";
+// stakeRequire
+interface GovI {
+  function deposit(uint256 _amount) external returns (bool);
+  function join(address _signer) external returns (bool);
+  function leave() external returns (bool);
+  function withdraw() external returns (bool);
+  function stakeRequire() external returns (uint256);
+  
+  function getStatus(address _address) external view returns(uint256);
+  function getBalance(address _address) external view returns(uint256);
+  function getCoinbase(address _address) external view returns(address);
+  function getUnlockHeight(address _address) external view returns(uint256);
+  function isWithdrawable(address _address) external view returns(bool);
+}
+
+contract Bridge {
+    address constant public NTF_ADDRESS = 0x2c783ad80ff980ec75468477e3dd9f86123ecbda;
+    address constant public GOV_ADDRESS = 0x0000000000000000000000000000000000012345;
+    // NtfTokenI constant public ntfToken = NtfTokenI(NTF_ADDRESS);;
+    GovI constant public gov = GovI(GOV_ADDRESS);
+
+    constructor (
+        // address owner
+    )
+      public
+    {
+    }
+
+    function stakeRequire()
+        public
+        view
+        returns(uint)
+    {
+        return gov.stakeRequire();
+    }
+}

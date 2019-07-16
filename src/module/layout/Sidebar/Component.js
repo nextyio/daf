@@ -97,11 +97,8 @@ export default class extends BaseComponent {
           <Menu.Item key="pending-txs">
             <Icon type="credit-card" /> {I18N.get('0003')}
           </Menu.Item>
-          <Menu.Item key="comfirmed-txs">
+          <Menu.Item key="executed-txs">
             <Icon type="credit-card" /> {I18N.get('0004')}
-          </Menu.Item>
-          <Menu.Item key="reverted-txs">
-            <Icon type="credit-card" /> {I18N.get('0005')}
           </Menu.Item>
         </Menu>
       </Sider>
@@ -113,8 +110,7 @@ export default class extends BaseComponent {
     if (_.includes([
       'wallet',
       'pending-txs',
-      'comfirmed-txs',
-      'reverted-txs'
+      'executed-txs'
     ], key)) {
       this.props.history.push('/' + e.key)
     } else if (key === 'logout') {
@@ -139,8 +135,7 @@ export default class extends BaseComponent {
     let sidebar = [
       'wallet',
       'pending-txs',
-      'comfirmed-txs',
-      'reverted-txs'
+      'executed-txs'
     ]
 
     if (!url) {
