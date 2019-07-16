@@ -1,5 +1,4 @@
 node_modules/
-build/
 lib/
 
 # disable dist due to the aws server performance is too low to build dist.
