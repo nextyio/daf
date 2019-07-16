@@ -6,6 +6,7 @@ import I18N from '@/I18N'
 
 import './style.scss'
 const { Sider } = Layout // eslint-disable-line
+const { SubMenu } = Menu
 
 function isMobileDevice () {
   return (typeof window.orientation !== 'undefined') || (navigator.userAgent.indexOf('IEMobi l e') !== -1)
@@ -94,12 +95,21 @@ export default class extends BaseComponent {
           <Menu.Item key="wallet">
             <Icon type="credit-card" /> {I18N.get('0002')}
           </Menu.Item>
-          <Menu.Item key="pending-txs">
-            <Icon type="credit-card" /> {I18N.get('0003')}
-          </Menu.Item>
-          <Menu.Item key="executed-txs">
-            <Icon type="credit-card" /> {I18N.get('0004')}
-          </Menu.Item>
+
+          <SubMenu key="contracts" title={I18N.get('0005')}>
+            <Menu.Item key="gov">{I18N.get('00051')}</Menu.Item>
+            <Menu.Item key="pool-maker">{I18N.get('00052')}</Menu.Item>
+            <Menu.Item key="pool">{I18N.get('00053')}</Menu.Item>
+          </SubMenu>
+
+          <SubMenu key="transactions" title={I18N.get('0003')}>
+            <Menu.Item key="pending-txs">
+              <Icon type="credit-card" /> {I18N.get('00031')}
+            </Menu.Item>
+            <Menu.Item key="executed-txs">
+              <Icon type="credit-card" /> {I18N.get('00032')}
+            </Menu.Item>
+          </SubMenu>
         </Menu>
       </Sider>
     )

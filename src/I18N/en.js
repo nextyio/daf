@@ -1,10 +1,17 @@
 export default {
   // Header
   '0001': 'User',
-  '0002': 'Wallet Control',
-  '0003': 'Pending Txs',
-  '0004': 'Executed Txs',
-  '0005': 'Reverted Txs',
+  '0002': 'Wallet',
+
+  '0003': 'Transactions',
+  '00031': 'Pending Txs',
+  '00032': 'Executed Txs',
+
+  '0005': 'Actions',
+  '00051': 'Governance',
+  '00052': 'Pool Makers',
+  '00053': 'Pool Control',
+
   '0006': 'Tasks',
   '0007': 'Nexty Management',
   '0008': 'About',
