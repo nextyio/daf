@@ -73,6 +73,9 @@ contract Wallet is Owners{
     event Deposit(address indexed sender, uint value);
     event RequirementChange(uint required);
 
+    event CoinDistributed(uint ownersCount, uint share);
+    event ERC20Distributed(uint ownersCount, uint share);
+
     mapping (bytes32 => Transaction) public transactions;
 
     mapping (bytes32 => mapping (address => bool)) public confirmations;
@@ -103,12 +106,12 @@ contract Wallet is Owners{
     }
 
     modifier confirmed(bytes32 _transactionId, address _owner) {
-        require(confirmations[_transactionId][_owner], "owner not comfirmed this tx");
+        require(confirmations[_transactionId][_owner], "owner not confirmed this tx");
         _;
     }
 
     modifier notConfirmed(bytes32 _transactionId, address _owner) {
-        require(!confirmations[_transactionId][_owner], "owner already comfirmed this tx");
+        require(!confirmations[_transactionId][_owner], "owner already confirmed this tx");
         _;
     }
 
@@ -340,7 +343,28 @@ contract Wallet is Owners{
         emit Submission(transactionId, msg.sender);
     }
 
-    function getComfirmStatus(bytes32 _transactionId, address _owner)
+    /// @dev distrubute coins to all owners
+    function distributeCoin()
+        public
+        onlyWallet
+    {
+        uint share = address(this).balance / ownersCount();
+        address owner;
+        for (uint i = 0; i < ownersCount(), i++) {
+            owner = owner[i];
+            owner.transfer(share);
+        }
+        emit CoinDistributed(ownersCount(), share)
+    }
+
+    /// @dev distrubute ERC20 tokens to all owners
+    function distributeERC20(address _tokenAddress)
+        public
+        onlyWallet
+    {
+    }
+
+    function getConfirmStatus(bytes32 _transactionId, address _owner)
         public
         view
         returns(bool)
