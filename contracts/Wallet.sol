@@ -1,8 +1,16 @@
 pragma solidity ^0.5.0;
 
 interface IERC20 {
+    function approve(address _spender, uint256 _value) external returns(bool);
     function balanceOf(address account) external view returns (uint256);
     function transfer(address recipient, uint256 amount) external returns (bool);
+}
+
+interface NtfPoolI {
+  function tokenDeposit(uint _amount) external;
+  function requestOut(uint _amount) external;
+  function tokenMemberWithdraw() external;
+  function coinWithdraw() external;
 }
 
 contract Owners {
@@ -80,6 +88,11 @@ contract Wallet is Owners{
 
     event DistributedCoin(uint total, uint share);
     event DistributedERC20(address tokenAddress, uint total, uint share);
+
+    event TokenDeposit(address ntfPool, uint amount);
+    event RequestOut(address ntfPool, uint amount);
+    event TokenMemberWithdraw(address ntfPool);
+    event CoinWithdraw(address ntfPool);
 
     mapping (bytes32 => Transaction) public transactions;
 
@@ -377,6 +390,40 @@ contract Wallet is Owners{
             tokenContract.transfer(owner, share);
         }
         emit DistributedERC20(_tokenAddress, total, share);
+    }
+
+    function tokenDeposit(address _ntfPoolAddress, uint _amount)
+        public
+        onlyWallet
+    {
+        IERC20 ntfContract = IERC20(0x2c783AD80ff980EC75468477E3dD9f86123EcBDa);
+        ntfContract.approve(_ntfPoolAddress, _amount);
+        NtfPoolI(_ntfPoolAddress).tokenDeposit(_amount);
+        emit TokenDeposit(_ntfPoolAddress, _amount);
+    }
+
+    function requestOut(address _ntfPoolAddress, uint _amount)
+        public
+        onlyWallet
+    {
+        NtfPoolI(_ntfPoolAddress).requestOut(_amount);
+        emit RequestOut(_ntfPoolAddress, _amount);
+    }
+
+    function tokenMemberWithdraw(address _ntfPoolAddress)
+        public
+        onlyOwner
+    {
+        NtfPoolI(_ntfPoolAddress).tokenMemberWithdraw();
+        emit TokenMemberWithdraw(_ntfPoolAddress);
+    }
+
+    function coinWithdraw(address _ntfPoolAddress)
+        public
+        onlyOwner
+    {
+        NtfPoolI(_ntfPoolAddress).coinWithdraw();
+        emit CoinWithdraw(_ntfPoolAddress);
     }
 
     function getConfirmStatus(bytes32 _transactionId, address _owner)
