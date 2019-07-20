@@ -1,5 +1,10 @@
 pragma solidity ^0.5.0;
 
+interface IERC20 {
+    function balanceOf(address account) external view returns (uint256);
+    function transfer(address recipient, uint256 amount) external returns (bool);
+}
+
 contract Owners {
     event OwnerAddition(address indexed _owner, bytes32 _ownerName);
     event OwnerRemoval(address indexed _owner, bytes32 _ownerName);
@@ -9,7 +14,7 @@ contract Owners {
     mapping (address => bool) public isOwner;
     mapping (address => bytes32) public ownerName;
 
-    address[] public owners;
+    address payable[] public owners;
 
     modifier onlyOwner() {
         require(isOwner[msg.sender], "owner only");
@@ -73,8 +78,8 @@ contract Wallet is Owners{
     event Deposit(address indexed sender, uint value);
     event RequirementChange(uint required);
 
-    event CoinDistributed(uint ownersCount, uint share);
-    event ERC20Distributed(uint ownersCount, uint share);
+    event DistributedCoin(uint total, uint share);
+    event DistributedERC20(address tokenAddress, uint total, uint share);
 
     mapping (bytes32 => Transaction) public transactions;
 
@@ -148,7 +153,7 @@ contract Wallet is Owners{
     /// @param _owners List of initial owners.
     /// @param _ownerNames List of initial ownerNames.
     /// @param _required Number of required confirmations.
-    constructor (address[] memory _owners, bytes32[] memory _ownerNames, uint _required)
+    constructor (address payable[] memory _owners, bytes32[] memory _ownerNames, uint _required)
         public
         validRequirement(_owners.length, _required)
     {
@@ -166,7 +171,7 @@ contract Wallet is Owners{
     /// @dev Allows to add a new _owner. Transaction has to be sent by wallet.
     /// @param _owner Address of new owner.
     /// @param _ownerName Name of new owner.
-    function addOwner(address _owner, bytes32 _ownerName)
+    function addOwner(address payable _owner, bytes32 _ownerName)
         public
         onlyWallet
         ownerDoesNotExist(_owner)
@@ -202,7 +207,7 @@ contract Wallet is Owners{
     /// @param _owner Address of owner to be replaced.
     /// @param _newOwner Address of new owner.
     /// @param _newOwnerName Name of new owner.
-    function replaceOwner(address _owner, address _newOwner, bytes32  _newOwnerName)
+    function replaceOwner(address payable _owner, address payable _newOwner, bytes32  _newOwnerName)
         public
         onlyWallet
         ownerExists(_owner)
@@ -348,20 +353,30 @@ contract Wallet is Owners{
         public
         onlyWallet
     {
+        uint total = address(this).balance;
         uint share = address(this).balance / ownersCount();
-        address owner;
-        for (uint i = 0; i < ownersCount(), i++) {
-            owner = owner[i];
+        address payable owner;
+        for (uint i = 0; i < ownersCount(); i++) {
+            owner = owners[i];
             owner.transfer(share);
         }
-        emit CoinDistributed(ownersCount(), share)
+        emit DistributedCoin(total, share);
     }
 
     /// @dev distrubute ERC20 tokens to all owners
+    /// @param _tokenAddress ERC20 Token Address
     function distributeERC20(address _tokenAddress)
         public
         onlyWallet
     {
+        IERC20 tokenContract = IERC20(_tokenAddress);
+        uint total = tokenContract.balanceOf(address(this));
+        uint share = total / ownersCount();
+        for (uint i = 0; i < ownersCount(); i++) {
+            address owner = owners[i];
+            tokenContract.transfer(owner, share);
+        }
+        emit DistributedERC20(_tokenAddress, total, share);
     }
 
     function getConfirmStatus(bytes32 _transactionId, address _owner)
