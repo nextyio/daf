@@ -12,6 +12,7 @@ class WalletRedux extends BaseRedux {
       ownersCount: 0,
       owners: null,
       balance: 0,
+      share: 0,
       ntfBalance: 0,
       required: 0,
 

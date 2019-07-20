@@ -59,6 +59,10 @@ export default class extends LoggedInPage {
     await this.props.transferNty(to, amount, this.state.description)
   }
 
+  async distributeCoin () {
+    await this.props.distributeCoin()
+  }
+
   renderOwners () {
     let obj = Object(this.props.owners)
     let owners = Object.keys(obj).map(function(key) {
@@ -140,6 +144,23 @@ export default class extends LoggedInPage {
     )
   }
 
+  renderCoinDistribution () {
+    return (
+      <Row style={{ 'marginTop': '15px' }}>
+
+        <Col span={6}>
+          total/share:
+        </Col>
+        <Col span={18}>
+          {weiToEther(this.props.balance)}/{weiToEther(this.props.share)}
+        </Col>
+        <Col span={24} style={{ 'marginTop': '15px' }}>
+          <Button onClick={this.distributeCoin.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Distribute NTY</Button>
+        </Col>
+      </Row>
+    )
+  }
+
   ord_renderContent () { // eslint-disable-line
     return (
       <div className="">
@@ -147,6 +168,7 @@ export default class extends LoggedInPage {
           {this.renderBaseInfo()}
           {this.renderOwners()}
           {this.renderTransfer()}
+          {this.renderCoinDistribution()}
         </div>
       </div>
     )

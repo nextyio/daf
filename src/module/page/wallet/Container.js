@@ -35,6 +35,7 @@ export default createContainer(Component, (state) => {
     required: state.wallet.required,
     ownersCount: state.wallet.ownersCount,
     owners: state.wallet.owners,
+    share: state.wallet.ownersCount ? (state.wallet.balance / state.wallet.ownersCount).toFixed(0) : 0,
 
     pendingTxCount: state.wallet.pendingTxCount,
     executedTxCount: state.wallet.executedTxCount
@@ -49,6 +50,9 @@ export default createContainer(Component, (state) => {
     },
     async transferNty (to, amount, description) {
       return await walletService.transferNty(to, amount, description)
+    },
+    async distributeCoin () {
+      return await walletService.distributeCoin()
     }
   }
 })

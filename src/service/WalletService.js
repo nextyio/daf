@@ -131,6 +131,23 @@ export default class extends BaseService {
     return rs
   }
 
+  async distributeCoin () {
+    let store = this.store.getState()
+    let methods = store.contracts.walletPro.methods
+    let description = 'Distribute Coin'
+    let amount = 0
+    let to = store.contracts.walletPro._address
+    let data = methods.distributeCoin().encodeABI()
+    let destination = to
+    let toBytes32 = fillBytes32(utils.asciiToHex(description))
+    if (!store.user.wallet) {
+      console.log('wallet not found to sign')
+      return false
+    }
+    let rs = await methods.submitTransaction(destination, amount, data, toBytes32).send({ from: store.user.wallet })
+    return rs
+  }
+
   async execute (txId) {
     let store = this.store.getState()
     let methods = store.contracts.walletPro.methods
