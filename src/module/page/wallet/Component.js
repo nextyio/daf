@@ -173,8 +173,9 @@ export default class extends LoggedInPage {
         <Col span={6}>
           ERC20 Token:
         </Col>
-        <Col spam={18}>
+        <Col span={18}>
           <Input
+              disabled = {true}
               className = "maxWidth"
               value={this.props.ERC20Address}
               onChange={this.onToChange.bind(this)}
