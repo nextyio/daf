@@ -13,6 +13,7 @@ import { Col, Row, Icon, InputNumber, Breadcrumb, Button, Select, Input } from '
 const Option = Select.Option
 
 const weiToEther = (wei) => {
+  if (wei === undefined) return 'Unknown'
   return Number(web3.utils.fromWei(wei.toString())).toFixed(4)
 }
 
@@ -61,6 +62,11 @@ export default class extends LoggedInPage {
 
   async distributeCoin () {
     await this.props.distributeCoin()
+  }
+
+  async distributeERC20 () {
+    let _tokenAddress = this.props.ERC20Address
+    await this.props.distributeERC20(_tokenAddress)
   }
 
   renderOwners () {
@@ -161,6 +167,48 @@ export default class extends LoggedInPage {
     )
   }
 
+  renderERC20Distribution () {
+    return (
+      <Row style={{ 'marginTop': '15px' }}>
+        <Col span={6}>
+          ERC20 Token:
+        </Col>
+        <Col spam={18}>
+          <Input
+              className = "maxWidth"
+              value={this.props.ERC20Address}
+              onChange={this.onToChange.bind(this)}
+            />
+        </Col>
+
+        <Col span={6}>
+          ERC20 Token Name:
+        </Col>
+        <Col span={18}>
+          {this.props.ERC20Name}
+        </Col>
+
+        <Col span={6}>
+          ERC20 Token Decimal:
+        </Col>
+        <Col span={18}>
+          {this.props.ERC20Decimal}
+        </Col>
+
+        <Col span={6}>
+          total/share:
+        </Col>
+        <Col span={18}>
+          {weiToEther(this.props.ERC20Balance)}/{weiToEther(this.props.ERC20Share)}
+        </Col>
+
+        <Col span={24} style={{ 'marginTop': '15px' }}>
+          <Button onClick={this.distributeERC20.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Distribute ERC20</Button>
+        </Col>
+      </Row>
+    )
+  }
+
   ord_renderContent () { // eslint-disable-line
     return (
       <div className="">
@@ -169,6 +217,7 @@ export default class extends LoggedInPage {
           {this.renderOwners()}
           {this.renderTransfer()}
           {this.renderCoinDistribution()}
+          {this.renderERC20Distribution()}
         </div>
       </div>
     )

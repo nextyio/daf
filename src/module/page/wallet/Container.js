@@ -10,7 +10,7 @@ export default createContainer(Component, (state) => {
   const ntfTokenService = new NtfTokenService()
   const walletService = new WalletService()
   async function load () {
-    walletService.loadAddress()
+    walletService.loadAddress(null)
     walletService.loadBalance()
     walletService.loadNtfBalance()
     walletService.loadRequired()
@@ -36,6 +36,11 @@ export default createContainer(Component, (state) => {
     ownersCount: state.wallet.ownersCount,
     owners: state.wallet.owners,
     share: state.wallet.ownersCount ? (state.wallet.balance / state.wallet.ownersCount).toFixed(0) : 0,
+    ERC20Address: state.wallet.ERC20Address,
+    ERC20Name: state.wallet.ERC20Name,
+    ERC20Decimal: state.wallet.ERC20Decimal,
+    ERC20Balance: state.wallet.ERC20Balance,
+    ERC20Share: (state.wallet.ownersCount) ? (state.wallet.ERC20Balance / state.wallet.ownersCount).toFixed(0) : 0,
 
     pendingTxCount: state.wallet.pendingTxCount,
     executedTxCount: state.wallet.executedTxCount
@@ -53,6 +58,9 @@ export default createContainer(Component, (state) => {
     },
     async distributeCoin () {
       return await walletService.distributeCoin()
+    },
+    async distributeERC20 (_tokenAddress) {
+      return await walletService.distributeERC20(_tokenAddress)
     }
   }
 })

@@ -1,5 +1,7 @@
 import BaseService from '../model/BaseService'
 import { utils } from 'web3'
+import { CONTRACTS } from '@/constant'
+
 
 function fillBytes32 (text) {
   let s = text.split('x')[1]
@@ -11,11 +13,22 @@ function fillBytes32 (text) {
 }
 
 export default class extends BaseService {
-  async loadAddress () {
+  async loadAddress (_ERC20address) {
     const redux = this.store.getRedux('wallet')
     let store = this.store.getState()
     let address = store.contracts.walletPro._address
     await this.dispatch(redux.actions.address_update(address))
+    let ERC20Address = _ERC20address !== null ? _ERC20address : store.contracts.ntfToken._address
+    await this.dispatch(redux.actions.ERC20Address_update(ERC20Address))
+    let web3 = store.user.web3
+    let ERC20Contract = new web3.eth.Contract(CONTRACTS.NtfToken.abi, ERC20Address)
+    let methods = ERC20Contract.methods
+    let ERC20Name = await methods.name().call()
+    await this.dispatch(redux.actions.ERC20Name_update(ERC20Name))
+    let ERC20Decimal = await methods.decimals().call()
+    await this.dispatch(redux.actions.ERC20Decimal_update(ERC20Decimal))
+    let ERC20Balance = await methods.balanceOf(address).call()
+    await this.dispatch(redux.actions.ERC20Balance_update(ERC20Balance))
   }
 
   async loadDeployedAt () {
@@ -138,6 +151,23 @@ export default class extends BaseService {
     let amount = 0
     let to = store.contracts.walletPro._address
     let data = methods.distributeCoin().encodeABI()
+    let destination = to
+    let toBytes32 = fillBytes32(utils.asciiToHex(description))
+    if (!store.user.wallet) {
+      console.log('wallet not found to sign')
+      return false
+    }
+    let rs = await methods.submitTransaction(destination, amount, data, toBytes32).send({ from: store.user.wallet })
+    return rs
+  }
+
+  async distributeERC20 (_tokenAddress) {
+    let store = this.store.getState()
+    let methods = store.contracts.walletPro.methods
+    let description = 'Distribute ERC20'
+    let amount = 0
+    let to = store.contracts.walletPro._address
+    let data = methods.distributeERC20(_tokenAddress).encodeABI()
     let destination = to
     let toBytes32 = fillBytes32(utils.asciiToHex(description))
     if (!store.user.wallet) {
