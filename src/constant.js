@@ -1,8 +1,9 @@
 import NTFToken from './../deployed/NtfToken.json'
+import NtfPool from './../deployed/pool/NtfPool.json'
 import NextyGovernanceABI from './../deployed/NextyGovernance.json'
 import Wallet from './../build/contracts/Wallet.json'
 
-const TEST_MODE = true
+const TEST_MODE = false
 const NetId = TEST_MODE ? '111111' : '66666'
 
 export const USER_ROLE = {
@@ -28,6 +29,11 @@ export const CONTRACTS =
       {
         'abi': Wallet.abi,
         'address': Wallet.networks[NetId].address
+      },
+    'NtfPool':
+      {
+        'abi': NtfPool.abi,
+        'address': '0x0000000000000000000000000000000000000000'
       }
   }
 

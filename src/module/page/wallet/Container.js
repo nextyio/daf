@@ -61,6 +61,10 @@ export default createContainer(Component, (state) => {
     },
     async distributeERC20 (_tokenAddress) {
       return await walletService.distributeERC20(_tokenAddress)
+    },
+
+    async loadNtfPool (_poolAddress) {
+      return await walletService.loadNtfPool(_poolAddress)
     }
   }
 })

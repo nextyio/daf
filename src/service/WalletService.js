@@ -13,6 +13,17 @@ function fillBytes32 (text) {
 }
 
 export default class extends BaseService {
+
+  async loadNtfPool (_poolAddress) {
+    console.log('xxx poolAddress', _poolAddress)
+    const redux = this.store.getRedux('wallet')
+    let store = this.store.getState()
+    let web3 = store.user.web3
+    const pool = new web3.eth.Contract(CONTRACTS.NtfPool.abi, _poolAddress)
+    console.log('xxx pool', pool)
+    await this.dispatch(redux.actions.ntfPool_update(pool))
+  }
+
   async loadAddress (_ERC20address) {
     const redux = this.store.getRedux('wallet')
     let store = this.store.getState()

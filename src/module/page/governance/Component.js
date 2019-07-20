@@ -29,112 +29,32 @@ export default class extends LoggedInPage {
   loadData () {
   }
 
-  onNtfAmountChange (value) {
+  onPoolChange (e) {
     this.setState({
-      ntfAmount: value
+      pool: e.target.value
     })
   }
 
-  onDescriptionChange (e) {
-    this.setState({
-      description: e.target.value
-    })
+  async loadNtfPool () {
+    const pool = this.state.pool
+    return this.props.loadNtfPool(pool)
   }
 
-  onToChange (e) {
-    this.setState({
-      to: e.target.value
-    })
-  }
-
-  async transferNtf () {
-    let amount = web3.utils.toWei(this.state.ntfAmount.toString(), 'ether')
-    let to = this.state.to
-    await this.props.transferNtf(to, amount, this.state.description)
-  }
-
-  async transferNty () {
-    let amount = web3.utils.toWei(this.state.ntfAmount.toString(), 'ether')
-    let to = this.state.to
-    await this.props.transferNty(to, amount, this.state.description)
-  }
-
-  renderOwners () {
-    let obj = Object(this.props.owners)
-    let owners = Object.keys(obj).map(function(key) {
-      return [Number(key), obj[key]];
-    });
-
-    return (
-      <div>
-        <p>Owner List</p>
-        {owners.map((data) => <p key={data[0]}>{data[1].name} {data[1].address}</p>)}
-      </div>
-    )
-  }
-
-  renderBaseInfo () {
-    return (
-      <div>
-        <p>Foundation Wallet: {this.props.address}</p>
-        <p>Balance: {weiToEther(this.props.balance)} NTY / {weiToEther(this.props.ntfBalance)} NTF</p>
-        <p>Execution Requirement: {this.props.required} Confirmations / {this.props.ownersCount} Owners</p>
-        <p>
-          {this.props.pendingTxCount} Pending /
-          {this.props.executedTxCount} Executed
-        </p>
-      </div>
-    )
-  }
-
-  renderTransfer () {
+  renderPoolSelect () {
     return (
       <Row style={{ 'marginTop': '15px' }}>
 
         <Col span={6}>
-          To:
+          <Button onClick={this.loadNtfPool.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Load NTF Pool</Button>
         </Col>
         <Col span={18}>
 
           <Input
             className = "maxWidth"
             defaultValue={0}
-            value={this.state.to}
-            onChange={this.onToChange.bind(this)}
+            value={this.state.pool}
+            onChange={this.onPoolChange.bind(this)}
           />
-        </Col>
-
-        <Col span={6}>
-          Amount(NTF or NTY):
-        </Col>
-        <Col span={18}>
-
-          <InputNumber
-            className = "maxWidth"
-            defaultValue={0}
-            value={this.state.ntfAmount}
-            onChange={this.onNtfAmountChange.bind(this)}
-          />
-        </Col>
-
-        <Col span={6}>
-          Description:
-        </Col>
-        <Col span={18}>
-
-          <Input
-            className = "maxWidth"
-            defaultValue={0}
-            value={this.state.description}
-            onChange={this.onDescriptionChange.bind(this)}
-          />
-        </Col>
-
-        <Col span={12} style={{ 'marginTop': '15px' }}>
-          <Button onClick={this.transferNtf.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Transfer NTF</Button>
-        </Col>
-        <Col span={12} style={{ 'marginTop': '15px' }}>
-          <Button onClick={this.transferNty.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Transfer NTY</Button>
         </Col>
       </Row>
     )
@@ -145,9 +65,7 @@ export default class extends LoggedInPage {
       <div className="">
         <div className="ebp-header-divider">
           <h1> Governance's actions</h1>
-          {/* {this.renderBaseInfo()}
-          {this.renderOwners()}
-          {this.renderTransfer()} */}
+          {this.renderPoolSelect()}
         </div>
       </div>
     )
