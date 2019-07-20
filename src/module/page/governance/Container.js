@@ -29,7 +29,8 @@ export default createContainer(Component, (state) => {
   }
 
   return {
-
+    ntfPoolName: state.wallet.ntfPoolName,
+    ntfPool: state.ntfPool
   }
 }, () => {
   const ntfTokenService = new NtfTokenService()
@@ -38,6 +39,18 @@ export default createContainer(Component, (state) => {
   return {
     async loadNtfPool (_poolAddress) {
       return await walletService.loadNtfPool(_poolAddress)
+    },
+    async tokenDeposit ( _ntfPoolAddress, _amount) {
+      return await walletService.tokenDeposit( _ntfPoolAddress, _amount)
+    },
+    async requestOut ( _ntfPoolAddress, _amount) {
+      return await walletService.requestOut( _ntfPoolAddress, _amount)
+    },
+    async tokenMemberWithdraw (_ntfPoolAddress) {
+      return await walletService.tokenMemberWithdraw(_ntfPoolAddress)
+    },
+    async coinWithdraw (_ntfPoolAddress) {
+      return await walletService.coinWithdraw(_ntfPoolAddress)
     }
   }
 })

@@ -15,13 +15,14 @@ function fillBytes32 (text) {
 export default class extends BaseService {
 
   async loadNtfPool (_poolAddress) {
-    console.log('xxx poolAddress', _poolAddress)
     const redux = this.store.getRedux('wallet')
     let store = this.store.getState()
     let web3 = store.user.web3
     const pool = new web3.eth.Contract(CONTRACTS.NtfPool.abi, _poolAddress)
-    console.log('xxx pool', pool)
     await this.dispatch(redux.actions.ntfPool_update(pool))
+    const methods = await pool.methods
+    const poolName = await methods.name().call()
+    await this.dispatch(redux.actions.ntfPoolName_update(poolName))
   }
 
   async loadAddress (_ERC20address) {
@@ -186,6 +187,64 @@ export default class extends BaseService {
       return false
     }
     let rs = await methods.submitTransaction(destination, amount, data, toBytes32).send({ from: store.user.wallet })
+    return rs
+  }
+
+  async tokenDeposit (_ntfPoolAddress, _amount) {
+    let store = this.store.getState()
+    let methods = store.contracts.walletPro.methods
+    let description = 'tokenDeposit'
+    let amount = 0
+    let to = store.contracts.walletPro._address
+    let data = methods.tokenDeposit(_ntfPoolAddress, _amount).encodeABI()
+    let destination = to
+    let toBytes32 = fillBytes32(utils.asciiToHex(description))
+    if (!store.user.wallet) {
+      console.log('wallet not found to sign')
+      return false
+    }
+    let rs = await methods.submitTransaction(destination, amount, data, toBytes32).send({ from: store.user.wallet })
+    return rs
+  }
+
+  async requestOut (_ntfPoolAddress, _amount) {
+    let store = this.store.getState()
+    let methods = store.contracts.walletPro.methods
+    let description = 'requestOut'
+    let amount = 0
+    let to = store.contracts.walletPro._address
+    let data = methods.requestOut(_ntfPoolAddress, _amount).encodeABI()
+    let destination = to
+    let toBytes32 = fillBytes32(utils.asciiToHex(description))
+    if (!store.user.wallet) {
+      console.log('wallet not found to sign')
+      return false
+    }
+    let rs = await methods.submitTransaction(destination, amount, data, toBytes32).send({ from: store.user.wallet })
+    return rs
+  }
+
+  async tokenMemberWithdraw (_ntfPoolAddress) {
+    let store = this.store.getState()
+    let methods = store.contracts.walletPro.methods
+
+    if (!store.user.wallet) {
+      console.log('wallet not found to sign')
+      return false
+    }
+    let rs = await methods.tokenMemberWithdraw(_ntfPoolAddress).send({ from: store.user.wallet })
+    return rs
+  }
+
+  async coinWithdraw (_ntfPoolAddress) {
+    let store = this.store.getState()
+    let methods = store.contracts.walletPro.methods
+
+    if (!store.user.wallet) {
+      console.log('wallet not found to sign')
+      return false
+    }
+    let rs = await methods.coinWithdraw(_ntfPoolAddress).send({ from: store.user.wallet })
     return rs
   }
 

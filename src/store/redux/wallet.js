@@ -28,7 +28,8 @@ class WalletRedux extends BaseRedux {
       pendingTxs: [],
       executedTxs: [],
 
-      ntfPool: null
+      ntfPool: null,
+      ntfPoolName: ''
     }
   }
 }
