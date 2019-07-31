@@ -10,14 +10,15 @@ export default createContainer(Component, (state) => {
   const ntfTokenService = new NtfTokenService()
   const walletService = new WalletService()
   async function load () {
-    walletService.loadAddress(null)
-    walletService.loadBalance()
-    walletService.loadNtfBalance()
-    walletService.loadRequired()
-    walletService.loadOwners()
-    walletService.loadPendingTxCount()
-    walletService.loadExecutedTxCount()
-    walletService.loadTxs()
+    // walletService.loadAddress(null)
+    // walletService.loadBalance()
+    // walletService.loadNtfBalance()
+    // walletService.loadRequired()
+    // walletService.loadOwners()
+    // walletService.loadPendingTxCount()
+    // walletService.loadExecutedTxCount()
+    // walletService.loadTxs()
+    walletService.loadMyWallets()
   }
 
   if (state.user.wallet !== curWallet && !curWallet) {
@@ -29,7 +30,7 @@ export default createContainer(Component, (state) => {
   }
 
   return {
-    address: state.wallet.address,
+    address: state.user.selectedWallet,
     balance: state.wallet.balance,
     ntfBalance: state.wallet.ntfBalance,
     required: state.wallet.required,
@@ -43,13 +44,17 @@ export default createContainer(Component, (state) => {
     ERC20Share: (state.wallet.ownersCount) ? (state.wallet.ERC20Balance / state.wallet.ownersCount).toFixed(0) : 0,
 
     pendingTxCount: state.wallet.pendingTxCount,
-    executedTxCount: state.wallet.executedTxCount
+    executedTxCount: state.wallet.executedTxCount,
+    myWallets: state.user.myWallets
   }
 }, () => {
   const ntfTokenService = new NtfTokenService()
   const walletService = new WalletService()
 
   return {
+    async selectWallet(wallet) {
+      return await walletService.selectWallet(wallet)
+    },
     async transferNtf (to, amount, description) {
       return await walletService.transferNtf(to, amount, description)
     },

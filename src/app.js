@@ -63,11 +63,12 @@ function setupWeb3 () {
         window.web3.version.getNetwork( async (err, networkId) => {
             if (networkId === WEB3.NETWORK_ID) {
                 let web3 = new Web3(window.ethereum)
-                let web3Event = new Web3('http://rpc.testnet.nexty.io:8545')
+                let web3Event = new Web3('https://rpc.nexty.io')
 
                 const contract = {
                   NtfToken: new web3.eth.Contract(CONTRACTS.NtfToken.abi, CONTRACTS.NtfToken.address),
-                  WalletPro: new web3.eth.Contract(CONTRACTS.Wallet.abi, CONTRACTS.Wallet.address),
+                  WalletPro: new web3.eth.Contract(CONTRACTS.Wallet.abi),
+                  WalletMaster: new web3.eth.Contract(CONTRACTS.WalletMaster.abi, CONTRACTS.WalletMaster.address),
                   WalletProEvent: new web3Event.eth.Contract(CONTRACTS.Wallet.abi, CONTRACTS.Wallet.address),
                 }
 
@@ -75,6 +76,7 @@ function setupWeb3 () {
                   await store.dispatch(userRedux.actions.loginMetamask_update(true))
                   await store.dispatch(contractsRedux.actions.ntfToken_update(contract.NtfToken))
                   await store.dispatch(contractsRedux.actions.walletPro_update(contract.WalletPro))
+                  await store.dispatch(contractsRedux.actions.walletMaster_update(contract.WalletMaster))
                   await store.dispatch(contractsRedux.actions.walletProEvent_update(contract.WalletProEvent))
                   await store.dispatch(userRedux.actions.web3_update(web3))
                   await userService.metaMaskLogin(accounts[0])

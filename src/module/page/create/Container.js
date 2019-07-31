@@ -18,6 +18,7 @@ export default createContainer(Component, (state) => {
     walletService.loadPendingTxCount()
     walletService.loadExecutedTxCount()
     walletService.loadTxs()
+    walletService.loadMyWallets()
   }
 
   if (state.user.wallet !== curWallet && !curWallet) {
@@ -49,6 +50,9 @@ export default createContainer(Component, (state) => {
     },
     async transferNty (to, amount, description) {
       return await walletService.transferNty(to, amount, description)
+    },
+    async create( owners, required) {
+      return await walletService.create(owners, required)
     }
   }
 })

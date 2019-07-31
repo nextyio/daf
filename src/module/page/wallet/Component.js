@@ -9,7 +9,7 @@ import moment from 'moment'
 
 import './style.scss'
 
-import { Col, Row, Icon, InputNumber, Breadcrumb, Button, Select, Input } from 'antd' // eslint-disable-line
+import { Col, Icon, InputNumber, Breadcrumb, Button, Select, Input } from 'antd' // eslint-disable-line
 const Option = Select.Option
 
 const weiToEther = (wei) => {
@@ -23,6 +23,13 @@ const toTime = (value) => {
 }
 
 export default class extends LoggedInPage {
+  constructor () {
+    super()
+    this.state = {
+      selectedWallet: ''
+    }
+  }
+
   componentDidMount () {
     this.loadData()
   }
@@ -48,6 +55,17 @@ export default class extends LoggedInPage {
     })
   }
 
+  onWalletChange (e) {
+    this.setState({
+      selectedWallet: e.target.value
+    })
+  }
+
+  async loadWallet () {
+    let wallet = this.state.selectedWallet
+    await this.props.selectWallet(wallet)
+  }
+
   async transferNtf () {
     let amount = web3.utils.toWei(this.state.ntfAmount.toString(), 'ether')
     let to = this.state.to
@@ -69,6 +87,12 @@ export default class extends LoggedInPage {
     await this.props.distributeERC20(_tokenAddress)
   }
 
+  async handleSelectWallet (value) {
+    this.setState({
+      selectedWallet: value
+    })
+  }
+
   renderOwners () {
     let obj = Object(this.props.owners)
     let owners = Object.keys(obj).map(function(key) {
@@ -76,30 +100,54 @@ export default class extends LoggedInPage {
     });
 
     return (
-      <div>
+      <Col span={24}>
         <p>Owner List</p>
         {owners.map((data) => <p key={data[0]}>{data[1].name} {data[1].address}</p>)}
-      </div>
+      </Col>
     )
   }
 
   renderBaseInfo () {
+    let obj = Object(this.props.myWallets)
+    let myWallets = Object.keys(obj).map(function(key) {
+      return obj[key]
+    });
+    // const myWallets = this.props.myWallets ? this.props.myWallets : []
     return (
       <div>
-        <p>Foundation Wallet: {this.props.address}</p>
-        <p>Balance: {weiToEther(this.props.balance)} NTY / {weiToEther(this.props.ntfBalance)} NTF</p>
-        <p>Execution Requirement: {this.props.required} Confirmations / {this.props.ownersCount} Owners</p>
-        <p>
-          {this.props.pendingTxCount} Pending /
-          {this.props.executedTxCount} Executed
-        </p>
+        <Col span={6}><p>Import:</p></Col>
+        <Col span={10}>
+          <Input
+            className = "maxWidth"
+            defaultValue={this.state.selectedWallet}
+            value={this.state.selectedWallet}
+            onChange={this.onWalletChange.bind(this)}
+          />
+        </Col>
+        <Col span={4}>
+          <Select onChange={this.handleSelectWallet.bind(this)} className = "maxWidth" defaultValue="Yours">
+            {myWallets.map((wallet) => {
+              return (<Option key={wallet} value={wallet}>{wallet}</Option>)
+            })}
+          </Select>
+        </Col>
+        <Col span={4}><Button className = "maxWidth" type ="primary" onClick={() => this.loadWallet()}>Load</Button></Col>
+        <Col span={24}>
+          <p>Wallet: {this.props.address}</p>
+          <p>Balance: {weiToEther(this.props.balance)} NTY / {weiToEther(this.props.ntfBalance)} NTF</p>
+          <p>Execution Requirement: {this.props.required} Confirmations / {this.props.ownersCount} Owners</p>
+          <p>
+            {this.props.pendingTxCount} Pending /
+            {this.props.executedTxCount} Executed
+          </p>
+        </Col>
       </div>
     )
   }
 
   renderTransfer () {
     return (
-      <Row style={{ 'marginTop': '15px' }}>
+      <Col span={24} style={{ 'marginTop': '15px' }}>
 
         <Col span={6}>
           To:
@@ -146,13 +194,13 @@ export default class extends LoggedInPage {
         <Col span={12} style={{ 'marginTop': '15px' }}>
           <Button onClick={this.transferNty.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Transfer NTY</Button>
         </Col>
-      </Row>
+      </Col>
     )
   }
 
   renderCoinDistribution () {
     return (
-      <Row style={{ 'marginTop': '15px' }}>
+      <Col span={24} style={{ 'marginTop': '15px' }}>
 
         <Col span={6}>
           total/share:
@@ -163,13 +211,13 @@ export default class extends LoggedInPage {
         <Col span={24} style={{ 'marginTop': '15px' }}>
           <Button onClick={this.distributeCoin.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Distribute NTY</Button>
         </Col>
-      </Row>
+      </Col>
     )
   }
 
   renderERC20Distribution () {
     return (
-      <Row style={{ 'marginTop': '15px' }}>
+      <Col span={24} style={{ 'marginTop': '15px' }}>
         <Col span={6}>
           ERC20 Token:
         </Col>
@@ -206,7 +254,7 @@ export default class extends LoggedInPage {
         <Col span={24} style={{ 'marginTop': '15px' }}>
           <Button onClick={this.distributeERC20.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Distribute NTF</Button>
         </Col>
-      </Row>
+      </Col>
     )
   }
 

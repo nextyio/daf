@@ -1,4 +1,5 @@
 var Wallet = artifacts.require('./Wallet.sol');
+var WalletMaster = artifacts.require('./WalletMaster.sol');
 
 function fillBytes32(text) {
     let s = text.split('x')[1]
@@ -19,5 +20,6 @@ module.exports = async function (deployer) {
         owners,
         toBytes32,
         required,
-    ) 
+    )
+    await deployer.deploy(WalletMaster)
 }

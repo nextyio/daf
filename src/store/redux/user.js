@@ -25,7 +25,9 @@ class UserRedux extends BaseRedux {
       isLocking: false,
       unlockTime: 0,
       loginMetamask: true,
-      myPendingOutAmount: 0
+      myPendingOutAmount: 0,
+      myWallets: [],
+      selectedWallet: ''
     }
   }
 }

@@ -9,7 +9,7 @@ import moment from 'moment'
 
 import './style.scss'
 
-import { Col, Row, Icon, InputNumber, Breadcrumb, Button, Select, Input } from 'antd' // eslint-disable-line
+import { Col, Row, Icon, InputNumber, Breadcrumb, Button, Select, Input, Notification, message } from 'antd' // eslint-disable-line
 const Option = Select.Option
 
 const weiToEther = (wei) => {
@@ -22,6 +22,16 @@ const toTime = (value) => {
 }
 
 export default class extends LoggedInPage {
+
+  constructor() {
+    super();
+    this.state = {
+      ownerNumber: 2,
+      required: 2,
+      owners: [{ name: "", address: "" }, { name: "", address: "" }]
+    };
+  }
+
   componentDidMount () {
     this.loadData()
   }
@@ -29,9 +39,15 @@ export default class extends LoggedInPage {
   loadData () {
   }
 
-  onNtfAmountChange (value) {
+  onOwnerNumberChange (value) {
     this.setState({
-      ntfAmount: value
+      ownerNumber: value
+    })
+  }
+
+  onRequiredChange (value) {
+    this.setState({
+      required: value
     })
   }
 
@@ -59,84 +75,82 @@ export default class extends LoggedInPage {
     await this.props.transferNty(to, amount, this.state.description)
   }
 
-  renderOwners () {
-    let obj = Object(this.props.owners)
-    let owners = Object.keys(obj).map(function(key) {
-      return [Number(key), obj[key]];
-    });
-
-    return (
-      <div>
-        <p>Owner List</p>
-        {owners.map((data) => <p key={data[0]}>{data[1].name} {data[1].address}</p>)}
-      </div>
-    )
-  }
-
   renderBaseInfo () {
     return (
       <div>
-        <p>Foundation Wallet: {this.props.address}</p>
-        <p>Balance: {weiToEther(this.props.balance)} NTY / {weiToEther(this.props.ntfBalance)} NTF</p>
-        <p>Execution Requirement: {this.props.required} Confirmations / {this.props.ownersCount} Owners</p>
-        <p>
-          {this.props.pendingTxCount} Pending /
-          {this.props.executedTxCount} Executed
-        </p>
-      </div>
-    )
-  }
-
-  renderTransfer () {
-    return (
-      <Row style={{ 'marginTop': '15px' }}>
-
-        <Col span={6}>
-          To:
+        <Col span={4}>
+          Number of Owners
         </Col>
-        <Col span={18}>
-
-          <Input
-            className = "maxWidth"
-            defaultValue={0}
-            value={this.state.to}
-            onChange={this.onToChange.bind(this)}
-          />
+        <Col span={4}>
+          <label>{this.state.owners.length}</label>
         </Col>
 
-        <Col span={6}>
-          Amount(NTF or NTY):
+        <Col span={4}>
+          Required
         </Col>
-        <Col span={18}>
+        <Col span={4}>
 
           <InputNumber
             className = "maxWidth"
             defaultValue={0}
-            value={this.state.ntfAmount}
-            onChange={this.onNtfAmountChange.bind(this)}
+            value={this.state.required}
+            onChange={this.onRequiredChange.bind(this)}
           />
         </Col>
 
-        <Col span={6}>
-          Description:
+        <Col span={8}>
+          <Button
+            type="primary"
+            className = "maxWidth primary"
+            onClick={() => this.create()}
+          >
+            Create
+          </Button>
         </Col>
-        <Col span={18}>
+        <p> </p>
+        {this.state.owners.map((owner, idx) => (
+          <Col span={24}>
+            <Col span={6}>
+              <Input
+                type="text"
+                placeholder={`owner #${idx + 1} name`}
+                value={owner.name}
+                onChange={this.handleOwnerNameChange(idx)}
+              />
+            </Col>
 
-          <Input
-            className = "maxWidth"
-            defaultValue={0}
-            value={this.state.description}
-            onChange={this.onDescriptionChange.bind(this)}
-          />
-        </Col>
+            <Col span={12}>
+              <Input
+                type="text"
+                placeholder={`owner #${idx + 1} address`}
+                value={owner.address}
+                onChange={this.handleOwnerAddressChange(idx)}
+              />
+            </Col>
 
-        <Col span={12} style={{ 'marginTop': '15px' }}>
-          <Button onClick={this.transferNtf.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Transfer NTF</Button>
+            <Col span={6}>
+              <Button
+                type="danger"
+                onClick={this.handleRemoveOwner(idx)}
+                className="maxWidth"
+              >
+                Remove
+              </Button>
+            </Col>
+
+          </Col>
+        ))}
+
+        <Col span={24}>
+          <Button
+            type="dashed"
+            onClick={this.handleAddOwner}
+            className="maxWidth"
+          >
+            Add Owner
+          </Button>
         </Col>
-        <Col span={12} style={{ 'marginTop': '15px' }}>
-          <Button onClick={this.transferNty.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Transfer NTY</Button>
-        </Col>
-      </Row>
+      </div>
     )
   }
 
@@ -145,9 +159,7 @@ export default class extends LoggedInPage {
       <div className="">
         <div className="ebp-header-divider">
           <h1> Create Multisign Wallet</h1>
-          {/* {this.renderBaseInfo()}
-          {this.renderOwners()}
-          {this.renderTransfer()} */}
+          {this.renderBaseInfo()}
         </div>
       </div>
     )
@@ -159,5 +171,55 @@ export default class extends LoggedInPage {
         <Breadcrumb.Item><Link to="/wallet"><Icon type="home" /> Home</Link></Breadcrumb.Item>
       </Breadcrumb>
     )
+  }
+
+  handleAddOwner = () => {
+    this.setState({
+      owners: this.state.owners.concat([{ name: "" }])
+    });
+  };
+
+  handleRemoveOwner = idx => () => {
+    this.setState({
+      owners: this.state.owners.filter((s, sidx) => idx !== sidx)
+    });
+  };
+
+  handleOwnerNameChange = idx => evt => {
+    const newOwners = this.state.owners.map((owner, sidx) => {
+      if (idx !== sidx) return owner;
+      return { ...owner, name: evt.target.value };
+    });
+
+    this.setState({ owners: newOwners });
+  };
+
+  handleOwnerAddressChange = idx => evt => {
+    const newOwners = this.state.owners.map((owner, sidx) => {
+      if (idx !== sidx) return owner;
+      return { ...owner, address: evt.target.value };
+    });
+
+    this.setState({ owners: newOwners });
+  };
+
+  create = async () => {
+    let ownerCount = this.state.owners.length
+    let required = this.state.required
+    if (required > ownerCount || ownerCount < 2) {
+      Notification.error({
+        message: 'invalid required or number of owners'
+      })
+    }
+
+    try {
+      await this.props.create(this.state.owners, required)
+    } catch (e) {
+      let eString = e.toString()
+      Notification.error({
+        message: eString.length > 20 ? 'Something wrong' : eString
+      })
+    }
+
   }
 }

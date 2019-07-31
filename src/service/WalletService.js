@@ -14,6 +14,76 @@ function fillBytes32 (text) {
 
 export default class extends BaseService {
 
+  /*
+    WALLET MASTER
+  */
+  async create (ownersObj, required) {
+    const owners = ownersObj.map((owner) => owner.address)
+    const ownerNames = ownersObj.map((owner) => owner.name)
+    const toBytes32 = ownerNames.map((ownerName) => fillBytes32(utils.asciiToHex(ownerName)))
+    // let owners = ['0x95e2fcBa1EB33dc4b8c6DCBfCC6352f0a253285d', '0xF20BC2E136e83ab3957d79E1a321F6AfAe5ebee6']
+    // let ownerNames = ['testacc', 'cash out']
+    // let toBytes32 = ownerNames.map((ownerName) => fillBytes32(web3.utils.asciiToHex(ownerName)))
+    // let required = 2
+    // await deployer.deploy(
+    //     Wallet,
+    //     owners,
+    //     toBytes32,
+    //     required,
+    // )
+    let store = this.store.getState()
+    console.log('xxx', owners)
+    console.log('xxx', required)
+    let methods = store.contracts.walletMaster.methods
+    const rs = await methods.create(owners, toBytes32, required).send({from: store.user.wallet})
+    await this.loadMyWallets()
+    return rs
+    // let contractInstance = new web3.eth.Contract(CONTRACTS.Wallet.abi)
+    // console.log('xxx', contractInstance)
+    // let deploy = contractInstance.deploy({
+    //   arguments: owners
+    // }).encodeABI()
+  }
+
+  async loadMyWallets () {
+    let store = this.store.getState()
+    let methods = store.contracts.walletMaster.methods
+    const rs = await methods.myWallets().call({ from: store.user.wallet })
+    const redux = this.store.getRedux('user')
+    await this.dispatch(redux.actions.myWallets_update(rs))
+    if (!store.user.selectedWallet && rs.length > 0) {
+      console.log('xxx', rs[0])
+      await this.selectWallet(rs[0])
+    }
+  }
+
+  async selectWallet (_address) {
+    let store = this.store.getState()
+    if (_address.toLowerCase() === store.user.selectedWallet.toLowerCase()) {
+      return
+    }
+    const contractsRedux = this.store.getRedux('contracts')
+    const userRedux = this.store.getRedux('user')
+    const WalletPro = new store.user.web3.eth.Contract(CONTRACTS.Wallet.abi, _address)
+    await this.dispatch(contractsRedux.actions.walletPro_update(WalletPro))
+    await this.dispatch(userRedux.actions.selectedWallet_update(_address))
+    await this.reload()
+  }
+
+  async reload () {
+    this.loadAddress(null)
+    this.loadBalance()
+    this.loadNtfBalance()
+    this.loadRequired()
+    this.loadOwners()
+    this.loadPendingTxCount()
+    this.loadExecutedTxCount()
+    this.loadTxs()
+    this.loadMyWallets()
+  }
+
+  /******************************************************/
+
   async loadNtfPool (_poolAddress) {
     const redux = this.store.getRedux('wallet')
     let store = this.store.getState()
@@ -84,6 +154,8 @@ export default class extends BaseService {
 
   async loadTxs () {
     const redux = this.store.getRedux('wallet')
+    await this.dispatch(redux.actions.pendingTxs_reset())
+    await this.dispatch(redux.actions.executedTxs_reset())
     let store = this.store.getState()
     let wallet = store.user.wallet
     let methods = store.contracts.walletPro.methods
