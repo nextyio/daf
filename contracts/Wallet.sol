@@ -24,10 +24,10 @@ contract Owners {
 
     address payable[] public owners;
 
-    modifier onlyOwner() {
+/*     modifier onlyOwner() {
         require(isOwner[msg.sender], "owner only");
         _;
-    }
+    } */
 
     modifier ownerDoesNotExist(address _owner) {
         require(!isOwner[_owner], "owner already exist");
@@ -412,7 +412,7 @@ contract Wallet is Owners{
 
     function tokenMemberWithdraw(address _ntfPoolAddress)
         public
-        onlyOwner
+        onlyWallet
     {
         NtfPoolI(_ntfPoolAddress).tokenMemberWithdraw();
         emit TokenMemberWithdraw(_ntfPoolAddress);
@@ -420,7 +420,7 @@ contract Wallet is Owners{
 
     function coinWithdraw(address _ntfPoolAddress)
         public
-        onlyOwner
+        onlyWallet
     {
         NtfPoolI(_ntfPoolAddress).coinWithdraw();
         emit CoinWithdraw(_ntfPoolAddress);
