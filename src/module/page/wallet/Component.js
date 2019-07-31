@@ -204,7 +204,7 @@ export default class extends LoggedInPage {
         </Col>
 
         <Col span={24} style={{ 'marginTop': '15px' }}>
-          <Button onClick={this.distributeERC20.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Distribute ERC20</Button>
+          <Button onClick={this.distributeERC20.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Distribute NTF</Button>
         </Col>
       </Row>
     )

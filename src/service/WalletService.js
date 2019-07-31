@@ -225,26 +225,37 @@ export default class extends BaseService {
   }
 
   async tokenMemberWithdraw (_ntfPoolAddress) {
+
     let store = this.store.getState()
     let methods = store.contracts.walletPro.methods
-
+    let description = 'Withdraw Token'
+    let amount = 0
+    let to = store.contracts.walletPro._address
+    let data = methods.tokenMemberWithdraw(_ntfPoolAddress).encodeABI()
+    let destination = to
+    let toBytes32 = fillBytes32(utils.asciiToHex(description))
     if (!store.user.wallet) {
       console.log('wallet not found to sign')
       return false
     }
-    let rs = await methods.tokenMemberWithdraw(_ntfPoolAddress).send({ from: store.user.wallet })
+    let rs = await methods.submitTransaction(destination, amount, data, toBytes32).send({ from: store.user.wallet })
     return rs
   }
 
   async coinWithdraw (_ntfPoolAddress) {
     let store = this.store.getState()
     let methods = store.contracts.walletPro.methods
-
+    let description = 'Withdraw Coin'
+    let amount = 0
+    let to = store.contracts.walletPro._address
+    let data = methods.coinWithdraw(_ntfPoolAddress).encodeABI()
+    let destination = to
+    let toBytes32 = fillBytes32(utils.asciiToHex(description))
     if (!store.user.wallet) {
       console.log('wallet not found to sign')
       return false
     }
-    let rs = await methods.coinWithdraw(_ntfPoolAddress).send({ from: store.user.wallet })
+    let rs = await methods.submitTransaction(destination, amount, data, toBytes32).send({ from: store.user.wallet })
     return rs
   }
 
