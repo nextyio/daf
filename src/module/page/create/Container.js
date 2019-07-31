@@ -18,7 +18,7 @@ export default createContainer(Component, (state) => {
     walletService.loadPendingTxCount()
     walletService.loadExecutedTxCount()
     walletService.loadTxs()
-    walletService.loadMyWallets()
+    // walletService.loadMyWallets()
   }
 
   if (state.user.wallet !== curWallet && !curWallet) {

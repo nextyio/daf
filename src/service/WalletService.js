@@ -51,6 +51,7 @@ export default class extends BaseService {
     const rs = await methods.myWallets().call({ from: store.user.wallet })
     const redux = this.store.getRedux('user')
     await this.dispatch(redux.actions.myWallets_update(rs))
+    if (rs.length === 0) this.path.push('/create')
     if (!store.user.selectedWallet && rs.length > 0) {
       console.log('xxx', rs[0])
       await this.selectWallet(rs[0])
