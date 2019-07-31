@@ -144,7 +144,7 @@ export default class extends LoggedInPage {
     return (
       <div className="">
         <div className="ebp-header-divider">
-          <h1> Pool's actions</h1>
+          <h1> Create Multisign Wallet</h1>
           {/* {this.renderBaseInfo()}
           {this.renderOwners()}
           {this.renderTransfer()} */}

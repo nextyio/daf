@@ -10,7 +10,7 @@ export default {
   '0005': 'Actions',
   '00051': 'Governance',
   '00052': 'Owners',
-  '00053': 'Pool Control',
+  '00053': 'Create',
 
   '0006': 'Tasks',
   '0007': 'Nexty Management',

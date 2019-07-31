@@ -99,7 +99,7 @@ export default class extends BaseComponent {
           <SubMenu key="contracts" title={I18N.get('0005')}>
             <Menu.Item key="governance">{I18N.get('00051')}</Menu.Item>
             <Menu.Item key="owners">{I18N.get('00052')}</Menu.Item>
-            <Menu.Item key="pool-control">{I18N.get('00053')}</Menu.Item>
+            <Menu.Item key="create">{I18N.get('00053')}</Menu.Item>
           </SubMenu>
 
           <SubMenu key="transactions" title={I18N.get('0003')}>
@@ -123,7 +123,7 @@ export default class extends BaseComponent {
       'executed-txs',
       'governance',
       'owners',
-      'pool-control'
+      'create'
     ], key)) {
       this.props.history.push('/' + e.key)
     } else if (key === 'logout') {
@@ -151,7 +151,7 @@ export default class extends BaseComponent {
       'executed-txs',
       'governance',
       'owners',
-      'pool-control'
+      'create'
     ]
 
     if (!url) {

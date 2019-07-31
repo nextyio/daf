@@ -1,7 +1,7 @@
 import WalletPage from '@/module/page/wallet/Container'
 import GovernancePage from '@/module/page/governance/Container'
 import OwnersPage from '@/module/page/owners/Container'
-import PoolControlPage from '@/module/page/pool-control/Container'
+import CreatePage from '@/module/page/create/Container'
 
 import PendingTxsPage from '@/module/page/pending-txs/Container'
 import ExecutedTxsPage from '@/module/page/executed-txs/Container'
@@ -32,8 +32,8 @@ export default [
     page: OwnersPage
   },
   {
-    path: '/pool-control',
-    page: PoolControlPage
+    path: '/create',
+    page: CreatePage
   },
   {
     path: '/pending-txs',
