@@ -132,7 +132,7 @@ export default class extends LoggedInPage {
           </Select>
         </Col>
         <Col span={4}><Button className = "maxWidth" type ="primary" onClick={() => this.loadWallet()}>Load</Button></Col>
-        <Col span={24}>
+        {this.props.address && <Col span={24}>
           <p>Wallet: {this.props.address}</p>
           <p>Balance: {weiToEther(this.props.balance)} NTY / {weiToEther(this.props.ntfBalance)} NTF</p>
           <p>Execution Requirement: {this.props.required} Confirmations / {this.props.ownersCount} Owners</p>
@@ -140,7 +140,7 @@ export default class extends LoggedInPage {
             {this.props.pendingTxCount} Pending /
             {this.props.executedTxCount} Executed
           </p>
-        </Col>
+        </Col>}
       </div>
     )
   }
@@ -263,10 +263,10 @@ export default class extends LoggedInPage {
       <div className="">
         <div className="ebp-header-divider">
           {this.renderBaseInfo()}
-          {this.renderOwners()}
-          {this.renderTransfer()}
-          {this.renderCoinDistribution()}
-          {this.renderERC20Distribution()}
+          {this.props.address && this.renderOwners()}
+          {this.props.address && this.renderTransfer()}
+          {this.props.address && this.renderCoinDistribution()}
+          {this.props.address && this.renderERC20Distribution()}
         </div>
       </div>
     )
