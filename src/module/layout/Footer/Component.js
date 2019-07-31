@@ -13,7 +13,7 @@ export default class extends BaseComponent {
           <Row className="d_rowFooter">
             <Col xs={24} sm={24} md={12} span={12}>
               <div className="d_footerSection">
-                <b>WHAT IS NEXTY POOL?</b>
+                <b>WHAT IS ...?</b>
                 <p className="margin-left-15"></p>
                 <a href="/assets/howtouse.pdf" target="_blank"><b>HOW TO USE</b></a>
               </div>
@@ -35,7 +35,7 @@ export default class extends BaseComponent {
             </Col>
           </Row>
           <Row className="d_rowFooterBottom">
-            <p className="text-center">2018 © Nexty Platform.</p>
+            <p className="text-center">2019 © Nexty Platform.</p>
           </Row>
         </div>
       </div>

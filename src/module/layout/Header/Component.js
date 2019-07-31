@@ -56,7 +56,7 @@ export default class extends BaseComponent {
       return (
         <div className="xlogo" style={{ background: '#0d47a1' }}>
 
-          <img src='/assets/images/logo.svg' />
+          {/* <img src='/assets/images/logo.svg' /> */}
         </div>
 
       )
