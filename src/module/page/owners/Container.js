@@ -44,11 +44,11 @@ export default createContainer(Component, (state) => {
   const walletService = new WalletService()
 
   return {
-    async transferNtf (to, amount, description) {
-      return await walletService.transferNtf(to, amount, description)
+    async removeOwner (address) {
+      return await walletService.removeOwner(address)
     },
-    async transferNty (to, amount, description) {
-      return await walletService.transferNty(to, amount, description)
-    }
+    async addOwner (address, name) {
+      return await walletService.addOwner(address, name)
+    },
   }
 })

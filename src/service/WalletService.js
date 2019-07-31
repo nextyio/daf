@@ -156,6 +156,43 @@ export default class extends BaseService {
     return rs
   }
 
+  async removeOwner (_address) {
+    let store = this.store.getState()
+    let methods = store.contracts.walletPro.methods
+    let description = 'rm owner'
+    let amount = 0
+    let to = store.contracts.walletPro._address
+    let data = methods.removeOwner(_address).encodeABI()
+    let destination = to
+    let toBytes32 = fillBytes32(utils.asciiToHex(description))
+    console.log('xxx', toBytes32)
+    if (!store.user.wallet) {
+      console.log('wallet not found to sign')
+      return false
+    }
+    let rs = await methods.submitTransaction(destination, amount, data, toBytes32).send({ from: store.user.wallet })
+    return rs
+  }
+
+  async addOwner (_address, _name) {
+    let nameBytes32 = fillBytes32(utils.asciiToHex(_name))
+    let store = this.store.getState()
+    let methods = store.contracts.walletPro.methods
+    let description = 'add owner'
+    let amount = 0
+    let to = store.contracts.walletPro._address
+    let data = methods.addOwner(_address, nameBytes32).encodeABI()
+    let destination = to
+    let toBytes32 = fillBytes32(utils.asciiToHex(description))
+    if (!store.user.wallet) {
+      console.log('wallet not found to sign')
+      return false
+    }
+    console.log('xxx', store.user.wallet)
+    let rs = await methods.submitTransaction(destination, amount, data, toBytes32).send({ from: store.user.wallet })
+    return rs
+  }
+
   async distributeCoin () {
     let store = this.store.getState()
     let methods = store.contracts.walletPro.methods

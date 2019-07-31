@@ -9,7 +9,7 @@ import moment from 'moment'
 
 import './style.scss'
 
-import { Col, Row, Icon, InputNumber, Breadcrumb, Button, Select, Input } from 'antd' // eslint-disable-line
+import { Col, Row, Icon, Notification, Breadcrumb, Button, Select, Input } from 'antd' // eslint-disable-line
 const Option = Select.Option
 
 const weiToEther = (wei) => {
@@ -35,9 +35,15 @@ export default class extends LoggedInPage {
     })
   }
 
-  onDescriptionChange (e) {
+  onOwnerChange (e) {
     this.setState({
-      description: e.target.value
+      owner: e.target.value
+    })
+  }
+
+  onOwnerNameChange (e) {
+    this.setState({
+      ownerName: e.target.value
     })
   }
 
@@ -47,16 +53,56 @@ export default class extends LoggedInPage {
     })
   }
 
-  async transferNtf () {
-    let amount = web3.utils.toWei(this.state.ntfAmount.toString(), 'ether')
-    let to = this.state.to
-    await this.props.transferNtf(to, amount, this.state.description)
+  async addOwner () {
+    let owner = this.state.owner.toLowerCase()
+    let ownerName = this.state.ownerName
+    // let owners = this.props.owners.map((obj) => obj.address)
+    let obj = Object(this.props.owners)
+    let owners = Object.keys(obj).map(function(key) {
+      return obj[key].address.toLowerCase()
+    });
+    const exist = owners.includes(owner)
+    
+    if (exist) {
+      Notification.error({
+        message: 'owner already exist'
+      })
+      return
+    }
+
+    try {
+      await this.props.addOwner(this.state.owner, ownerName)
+    } catch (e) {
+      let eString = e.toString()
+      Notification.error({
+        message: eString.length > 20 ? 'Something wrong' : eString
+      })
+    }
   }
 
-  async transferNty () {
-    let amount = web3.utils.toWei(this.state.ntfAmount.toString(), 'ether')
-    let to = this.state.to
-    await this.props.transferNty(to, amount, this.state.description)
+  async removeOwner () {
+    let owner = this.state.owner.toLowerCase()
+    // let owners = this.props.owners.map((obj) => obj.address)
+    let obj = Object(this.props.owners)
+    let owners = Object.keys(obj).map(function(key) {
+      return obj[key].address.toLowerCase()
+    });
+    const exist = owners.includes(owner)
+
+    if (!exist) {
+      Notification.error({
+        message: 'invalid owner address to remove'
+      })
+      return
+    }
+    try {
+      await this.props.removeOwner(this.state.owner)
+    } catch (e) {
+      let eString = e.toString()
+      Notification.error({
+        message: eString.length > 20 ? 'Something wrong' : eString
+      })
+    }
   }
 
   renderOwners () {
@@ -87,54 +133,40 @@ export default class extends LoggedInPage {
     )
   }
 
-  renderTransfer () {
+  renderAddRemove () {
     return (
       <Row style={{ 'marginTop': '15px' }}>
-
         <Col span={6}>
-          To:
+          Address:
         </Col>
         <Col span={18}>
 
           <Input
             className = "maxWidth"
-            defaultValue={0}
-            value={this.state.to}
-            onChange={this.onToChange.bind(this)}
+            defaultValue={''}
+            value={this.state.owner}
+            onChange={this.onOwnerChange.bind(this)}
           />
         </Col>
 
         <Col span={6}>
-          Amount(NTF or NTY):
-        </Col>
-        <Col span={18}>
-
-          <InputNumber
-            className = "maxWidth"
-            defaultValue={0}
-            value={this.state.ntfAmount}
-            onChange={this.onNtfAmountChange.bind(this)}
-          />
-        </Col>
-
-        <Col span={6}>
-          Description:
+          name:
         </Col>
         <Col span={18}>
 
           <Input
             className = "maxWidth"
-            defaultValue={0}
-            value={this.state.description}
-            onChange={this.onDescriptionChange.bind(this)}
+            defaultValue={''}
+            value={this.state.ownerName}
+            onChange={this.onOwnerNameChange.bind(this)}
           />
         </Col>
 
         <Col span={12} style={{ 'marginTop': '15px' }}>
-          <Button onClick={this.transferNtf.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Transfer NTF</Button>
+          <Button onClick={this.addOwner.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Add</Button>
         </Col>
         <Col span={12} style={{ 'marginTop': '15px' }}>
-          <Button onClick={this.transferNty.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Transfer NTY</Button>
+          <Button onClick={this.removeOwner.bind(this)} type="primary" className="btn-margin-top submit-button maxWidth">Remove(address only)</Button>
         </Col>
       </Row>
     )
@@ -144,10 +176,9 @@ export default class extends LoggedInPage {
     return (
       <div className="">
         <div className="ebp-header-divider">
-          <h1> PoolMaker's actions</h1>
-          {/* {this.renderBaseInfo()}
+          <h1> Owners list/add/remove</h1>
           {this.renderOwners()}
-          {this.renderTransfer()} */}
+          {this.renderAddRemove()}
         </div>
       </div>
     )

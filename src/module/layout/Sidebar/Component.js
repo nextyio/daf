@@ -98,7 +98,7 @@ export default class extends BaseComponent {
 
           <SubMenu key="contracts" title={I18N.get('0005')}>
             <Menu.Item key="governance">{I18N.get('00051')}</Menu.Item>
-            <Menu.Item key="pool-maker">{I18N.get('00052')}</Menu.Item>
+            <Menu.Item key="owners">{I18N.get('00052')}</Menu.Item>
             <Menu.Item key="pool-control">{I18N.get('00053')}</Menu.Item>
           </SubMenu>
 
@@ -122,7 +122,7 @@ export default class extends BaseComponent {
       'pending-txs',
       'executed-txs',
       'governance',
-      'pool-maker',
+      'owners',
       'pool-control'
     ], key)) {
       this.props.history.push('/' + e.key)
@@ -150,7 +150,7 @@ export default class extends BaseComponent {
       'pending-txs',
       'executed-txs',
       'governance',
-      'pool-maker',
+      'owners',
       'pool-control'
     ]
 

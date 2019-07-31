@@ -9,7 +9,7 @@ export default {
 
   '0005': 'Actions',
   '00051': 'Governance',
-  '00052': 'Pool Makers',
+  '00052': 'Owners',
   '00053': 'Pool Control',
 
   '0006': 'Tasks',
